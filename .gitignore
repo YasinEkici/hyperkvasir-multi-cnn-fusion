@@ -179,3 +179,45 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Claude Code session memory (local only)
+.claude/
+
+# PyTorch model files (feature caches and checkpoints — too large for git)
+*.pt
+*.pth
+
+# Project data and generated artifacts
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+artifacts/feature_cache/*
+!artifacts/feature_cache/.gitkeep
+artifacts/checkpoints/*
+!artifacts/checkpoints/.gitkeep
+feature_cache/
+checkpoints/
+results/*
+!results/runs/
+!results/runs/.gitkeep
+!results/feature_cache/
+!results/feature_cache/.gitkeep
+!results/tables/
+!results/tables/.gitkeep
+!results/figures/
+!results/figures/.gitkeep
+
+# Literature source PDFs and extracted heavy assets
+references/**/original.pdf
+references/**/*.pdf
+references/**/assets/*
+!references/**/assets/figures/
+!references/**/assets/pictures/
+references/**/assets/figures/*
+references/**/assets/pictures/*
+!references/**/assets/figures/.gitkeep
+!references/**/assets/pictures/.gitkeep
+references/**/*.jpg
+references/**/*.jpeg
+references/**/*.png
