@@ -1,0 +1,19 @@
+title: 'Grad-CAM++: Improved Visual Explanations for Deep Convolutional Networks'
+authors:
+- Aditya Chattopadhyay
+- Anirban Sarkar
+- Prantik Howlader
+- Vineeth N Balasubramanian
+abstract: Over the last decade, Convolutional Neural Network (CNN) models have been
+  highly successful in solving complex vision problems. However, these deep models
+  are perceived as 'black box' methods considering the lack of understanding of their
+  internal functioning. There has been a significant recent interest in developing
+  explainable deep learning models, and this paper is an effort in this direction...
+  (abstract truncated for brevity)
+keywords:
+- Explainable AI
+- Interpretable ML
+- Convolutional Neural Networks
+- Computer Vision
+journal: ''
+year: ''

@@ -1,0 +1,1 @@
+"""Exponential moving average placeholder."""

@@ -1,0 +1,26 @@
+experiments:
+  - id: "01_single_resnet50_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/single_resnet50.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+  - id: "01_single_resnet50_frozen_own"
+    dataset: "configs/dataset/hyperkvasir_23class_own.yaml"
+    method: "configs/method/single_resnet50.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+  - id: "02_single_mobilenetv2_frozen_own"
+    dataset: "configs/dataset/hyperkvasir_23class_own.yaml"
+    method: "configs/method/single_mobilenetv2.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+  - id: "03_single_efficientnetb0_frozen_own"
+    dataset: "configs/dataset/hyperkvasir_23class_own.yaml"
+    method: "configs/method/single_efficientnetb0.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+  - id: "04_triple_concat_frozen_own"
+    dataset: "configs/dataset/hyperkvasir_23class_own.yaml"
+    method: "configs/method/triple_concat.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
