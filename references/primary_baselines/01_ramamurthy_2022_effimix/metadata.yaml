@@ -1,0 +1,33 @@
+title: A Novel Multi-Feature Fusion Method for Classification of Gastrointestinal
+  Diseases Using Endoscopy Images
+authors:
+- Karthik Ramamurthy
+- Timothy Thomas George
+- Yash Shah
+- Parasa Sasidhar
+abstract: The first step in the diagnosis of gastric abnormalities is the detection
+  of various abnormalities in the human gastrointestinal tract. Manual examination
+  of endoscopy images relies on a medical practitioner's expertise to identify inflammatory
+  regions on the inner surface of the gastrointestinal tract. The length of the alimentary
+  canal and the large volume of images obtained from endoscopic procedures make traditional
+  detection methods time consuming and laborious. Recently, deep learning architectures
+  have achieved better results in the classification of endoscopy images. However,
+  visual similarities between different portions of the gastrointestinal tract pose
+  a challenge for effective disease detection. This work proposes a novel system for
+  the classification of endoscopy images by focusing on feature mining through convolutional
+  neural networks (CNN). The model presented is built by combining a state-of-the-art
+  architecture (i.e., EfficientNet B0) with a custom-built CNN architecture named
+  Effimix. The proposed Effimix model employs a combination of squeeze and excitation
+  layers and self-normalising activation layers for precise classification of gastrointestinal
+  diseases. Experimental observations on the HyperKvasir dataset confirm the effectiveness
+  of the proposed architecture for the classification of endoscopy images. The proposed
+  model yields an accuracy of 97.99%, with an F1 score, precision, and recall of 97%,
+  97%, and 98%, respectively, which is significantly higher compared to the existing
+  works.
+keywords:
+- gastrointestinal diseases
+- CNN
+- squeeze and excitation
+- HyperKvasir dataset
+journal: Diagnostics
+year: 2022

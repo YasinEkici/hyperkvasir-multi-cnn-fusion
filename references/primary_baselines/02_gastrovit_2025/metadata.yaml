@@ -1,0 +1,29 @@
+title: 'GastroViT: A Vision Transformer Based Ensemble Learning Approach for Gastrointestinal
+  Disease Classification with Grad CAM & SHAP Visualization'
+authors:
+- Sumaiya Tabassum
+- Md. Faysal Ahamed
+- Hafsa Binte Kibria
+- Md. Nahiduzzaman
+- Julfikar Haider
+- Muhammad E. H. Chowdhury
+- Muhammad Tariqul Islam
+abstract: The gastrointestinal (GI) tract of humans can have a wide variety of aberrant
+  mucosal abnormality findings, ranging from mild irritations to extremely fatal illnesses.
+  Prompt identification of gastrointestinal disorders greatly contributes to arresting
+  the progression of the illness and improving therapeutic outcomes. This paper presents
+  an ensemble of pre-trained vision transformers (ViTs) for accurately classifying
+  endoscopic images of the GI tract to categorize gastrointestinal problems and illnesses...
+  The model comprises only 20 million (M) parameters, even without data augmentation
+  and despite the highly imbalanced dataset. Additionally, the incorporation of explainable
+  AI (XAI) methods such as Grad-CAM (Gradient Weighted Class Activation Mapping) and
+  SHAP (Shapley Additive Explanations) enhances model interpretability, providing
+  valuable insights for reliable GI diagnosis in real-world settings.
+keywords:
+- Gastrointestinal Disease
+- Deep Learning
+- Vision Transformer
+- Gradient Weighted Class Activation Mapping (Grad-CAM)
+- Shapley Additive Explanations (SHAP)
+journal: ''
+year: null
