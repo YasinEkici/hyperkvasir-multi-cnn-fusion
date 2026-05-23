@@ -1,0 +1,11 @@
+name: "hyperkvasir_23class"
+root: "${DATA_ROOT}/hyperkvasir/labeled-images"
+num_classes: 23
+class_subset: "full"
+split_protocol: "hyperkvasir_official_5fold"
+official_split_file: "data/splits/official/5_fold_split.csv"
+split_manifest_dir: "data/splits"
+image_size: 224
+normalize_mean: [0.485, 0.456, 0.406]
+normalize_std: [0.229, 0.224, 0.225]
+class_imbalance_handling: "weighted_sampler"

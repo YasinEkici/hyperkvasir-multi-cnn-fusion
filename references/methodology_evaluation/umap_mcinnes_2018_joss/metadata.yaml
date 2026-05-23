@@ -1,0 +1,24 @@
+title: Class-Balanced Loss Based on Effective Number of Samples
+authors:
+- Yin Cui
+- Menglin Jia
+- Tsung-Yi Lin
+- Yang Song
+- Serge Belongie
+abstract: With the rapid increase of large-scale, real-world datasets, it becomes
+  critical to address the problem of longtailed data distribution (i.e., a few classes
+  account for most of the data, while most classes are under-represented). Existing
+  solutions typically adopt class re-balancing strategies such as re-sampling and
+  re-weighting based on the number of observations for each class. In this work, we
+  argue that as the number of samples increases, the additional benefit of a newly
+  added data point will diminish. We introduce a novel theoretical framework to measure
+  data overlap by associating with each sample a small neighboring region rather than
+  a single point... Comprehensive experiments are conducted on artificially induced
+  long-tailed CIFAR datasets and large-scale datasets including ImageNet and iNaturalist.
+keywords:
+- Class-balanced loss
+- Effective number of samples
+- Long-tailed distribution
+- Data overlap
+journal: ''
+year: 2019

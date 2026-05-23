@@ -1,0 +1,22 @@
+title: 'HEMF: an adaptive hierarchical enhanced multi-attention feature fusion framework
+  for cross-scale medical image classification'
+authors:
+- Jingdong He
+- Qiang Shi
+- Jun Ma
+- Dacheng Shi
+- Tie Min
+abstract: Medical image classification is essential for contemporary clinical diagnosis
+  and decision support systems. However, medical images generally have similar inter-class
+  features and complex structure patterns, making it a challenging task... Experimental
+  results demonstrate that with nearly minimal model parameters compared to other
+  advanced models, HEMF achieves the accuracy and F1-score of 87.34% and 78.89% on
+  the ISIC2018 dataset, 87.03% and 87.02% on the Kvasir dataset, and 82.26% and 82.20%
+  on the COVID-19 CT dataset, which are the state-of-the-art performance.
+keywords:
+- Multi-attention feature fusion
+- Adaptive feature extraction
+- Hierarchical enhanced features
+- Medical image classification
+journal: ''
+year: 2025
