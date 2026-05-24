@@ -62,8 +62,14 @@ Zero-support classes: none. No NaN values.
 | 2 | FrozenHeadModel shape tests (pair + triple) | `tests/test_frozen_head.py` |
 | 3 | Ablation table generator | `scripts/generate_report_tables.py` |
 | 4 | Comparison + training curve plots | `scripts/plot_results.py` |
+| 5 | RandAugment + CutMix augmentation | `src/data/augmentation.py` |
+| 6 | EMA with warm-start + device-safe update | `src/training/ema.py` |
+| 7 | LLRD per-backbone-block parameter groups | `src/training/optimizers.py` |
+| 8 | Fine-tune image-based training path | `scripts/train.py`, `src/training/trainer.py` |
+| 9 | Experiments 10–12 added to matrix | `configs/experiment_matrix.yaml` |
+| 10 | Confusion matrices + per-class F1 chart | `src/evaluation/visualization.py` |
 
-**Test suite:** 32 passed.
+**Test suite:** 104 passed.
 
 ### Results — Stage 0 + Stage 1 frozen (fold 0)
 
@@ -112,22 +118,34 @@ Source: `results/figures/per_class_f1_best.png`, `results/runs/07_pair_m_e_conca
 
 **Conclusion:** All F1=0 and near-zero classes have test support ≤ 10. This is a pure class-imbalance effect — the model never sees enough samples to learn discriminative features for these classes. The confusion matrix confirms the failure mode is not random: rare classes are absorbed by their visually or semantically closest majority class (UC grades confused with adjacent grades, Barrett's variants confused with normal-z-line). Fine-tuning with augmentation and LLRD should help by giving the model stronger gradient signal from frozen-backbone features.
 
-### Figures produced (Step 3d)
+### Results — Fine-tuning (fold 0)
 
-| Figure | Path | Description |
-|---|---|---|
-| Comparison bar chart | `results/figures/comparison_bar_chart.png` | Accuracy + macro F1 across all experiments |
-| Training curves | `results/figures/training_curves.png` | Val accuracy + macro F1 per epoch, all runs |
-| Per-class F1 (best) | `results/figures/per_class_f1_best.png` | Per-class F1 for best frozen config (07) |
-| Confusion matrices | `results/runs/{id}/confusion_matrix.png` | One per completed experiment (01–09) |
-
-### Results — Fine-tuning (fold 0) — *pending Steps 4–9*
+Config: `finetune_wide.yaml` — unfreeze_blocks=3, LLRD (backbone_lr=1e-4, decay=0.75), EMA (decay=0.999, start_epoch=5), CutMix (α=1.0, p=0.5), RandAugment (N=2, M=9), patience=8.
 
 | Experiment | Backbones | Fusion | Mode | Acc | Macro F1 | Stop epoch |
 |---|---|---|---|---:|---:|---:|
-| `10_triple_concat_finetune_wide_official` | R+M+E | concat | finetune-wide | — | — | — |
-| `11_triple_weighted_finetune_wide_official` | R+M+E | weighted | finetune-wide | — | — | — |
-| `12_single_resnet50_finetune_wide_official` | R | — | finetune-wide | — | — | — |
+| `10_triple_concat_finetune_wide_official` | R+M+E | concat | finetune-3blk | **0.8784** | **0.5796** | 14 |
+| `11_triple_weighted_finetune_wide_official` | R+M+E | weighted | finetune-3blk | 0.8685 | 0.5751 | 12 |
+| `12_single_resnet50_finetune_wide_official` | R | — | finetune-3blk | 0.8501 | 0.5748 | 12 |
+
+Zero-support classes: none in any run. No NaN values in any run.
+
+### Key findings (fine-tune regime, fold 0)
+
+- **New best overall:** Triple concat fine-tune (10) — acc=0.8784, F1=0.5796, surpassing the best frozen config (07 M+E: acc=0.8728, F1=0.5758).
+- **Fine-tune vs. frozen (triple concat):** acc +0.0217, F1 +0.0166 — end-to-end gradient flow through unfrozen backbone blocks consistently improves both metrics.
+- **Weighted vs. concat (fine-tune):** concat (0.5796) still edges weighted (0.5751) — the expected advantage of learnable branch weights did not materialise on fold 0; 5-fold CV in Week 3 will determine if this holds.
+- **Single ResNet50 fine-tune (12):** F1 0.5748 — a large gain over its frozen counterpart (01: 0.5588), but still below all triple fine-tune configs. End-to-end fine-tuning rescues ResNet50 performance that was lost during frozen pair/triple concat.
+- **Early stopping:** All three fine-tune runs stopped in 12–14 epochs. Small dataset + high augmentation → fast plateau; longer training with lower decay or larger dataset expected to extend convergence.
+
+### Figures produced (Steps 3d + 9)
+
+| Figure | Path | Description |
+|---|---|---|
+| Comparison bar chart | `results/figures/comparison_bar_chart.png` | Accuracy + macro F1 across all 12 experiments |
+| Training curves | `results/figures/training_curves.png` | Val accuracy + macro F1 per epoch, all runs |
+| Per-class F1 (best) | `results/figures/per_class_f1_best.png` | Per-class F1 for best config (10: triple concat fine-tune, F1=0.5796) |
+| Confusion matrices | `results/runs/{id}/confusion_matrix.png` | One per experiment (01–12) |
 
 ---
 

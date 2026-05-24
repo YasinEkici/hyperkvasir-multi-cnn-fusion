@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import random
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+from src.data.augmentation import apply_cutmix
 from src.evaluation.metrics import compute_metrics
 from src.utils.checkpointing import save_checkpoint
 from src.utils.logging import get_logger, log_epoch
+
+if TYPE_CHECKING:
+    from src.training.ema import EMA
 
 logger = get_logger(__name__)
 
@@ -28,6 +34,9 @@ class Trainer:
         num_classes: int,
         early_stopping_patience: int = 8,
         mixed_precision: bool = False,
+        ema: "EMA | None" = None,
+        cutmix_alpha: float = 0.0,
+        cutmix_prob: float = 0.0,
     ):
         self.model = model
         self.optimizer = optimizer
@@ -38,6 +47,9 @@ class Trainer:
         self.num_classes = num_classes
         self.patience = early_stopping_patience
         self.mixed_precision = mixed_precision and (device == "cuda")
+        self.ema = ema
+        self.cutmix_alpha = cutmix_alpha
+        self.cutmix_prob = cutmix_prob
 
         self.scaler = torch.amp.GradScaler("cuda") if self.mixed_precision else None
 
@@ -53,12 +65,27 @@ class Trainer:
         epochs: int,
     ) -> list[dict]:
         self.model.to(self.device)
+        ema_warm_started = False
 
         for epoch in range(1, epochs + 1):
             train_loss = self._train_epoch(train_loader)
-            val_metrics = self.evaluate(val_loader)
 
+            # EMA: update shadow weights every epoch once past start_epoch;
+            # apply shadow weights only for evaluation (not for gradient updates).
+            # On first activation, warm-start shadow from current trained weights
+            # so we don't apply near-random-init shadow during evaluation.
+            ema_active = self.ema is not None and (epoch - 1) >= self.ema.start_epoch
+            if self.ema is not None:
+                if ema_active and not ema_warm_started:
+                    self.ema.reset_shadow(self.model)
+                    ema_warm_started = True
+                self.ema.update(self.model, epoch - 1)
+            if ema_active:
+                self.ema.apply(self.model)
+
+            val_metrics = self.evaluate(val_loader)
             val_f1 = val_metrics["macro_f1"]
+
             epoch_record = {
                 "epoch": epoch,
                 "train_loss": train_loss,
@@ -72,19 +99,51 @@ class Trainer:
                 epoch, epochs, train_loss, val_f1, val_metrics["accuracy"],
             )
 
-            if val_f1 > self.best_val_f1:
+            improved = val_f1 > self.best_val_f1
+            if improved:
                 self.best_val_f1 = val_f1
                 self.epochs_no_improve = 0
+                # best.pt contains EMA weights when ema_active, live weights otherwise.
                 save_checkpoint(self.model, self.run_dir / "best.pt")
+                if ema_active:
+                    # Persist shadow weights separately for inspection / resuming.
+                    torch.save(self.ema._shadow, self.run_dir / "ema.pt")
             else:
                 self.epochs_no_improve += 1
-                if self.epochs_no_improve >= self.patience:
-                    logger.info("Early stopping at epoch %d.", epoch)
-                    break
 
+            if ema_active:
+                self.ema.restore(self.model)
+
+            if not improved and self.epochs_no_improve >= self.patience:
+                logger.info("Early stopping at epoch %d.", epoch)
+                break
+
+            # last.pt always contains live (non-EMA) weights for training resumption.
             save_checkpoint(self.model, self.run_dir / "last.pt")
 
         return self.history
+
+    # ------------------------------------------------------------------
+    def _compute_loss(
+        self, features: torch.Tensor, labels: torch.Tensor
+    ) -> torch.Tensor:
+        """Compute loss with optional CutMix mixing.
+
+        When cutmix_prob > 0, CutMix is applied with probability cutmix_prob.
+        Mixed loss: lam * L(logits, label_a) + (1-lam) * L(logits, label_b).
+        Falls back to standard cross-entropy when CutMix is not triggered.
+        """
+        if self.cutmix_prob > 0.0 and random.random() < self.cutmix_prob:
+            features, label_a, label_b, lam = apply_cutmix(
+                features, labels, alpha=self.cutmix_alpha
+            )
+            logits = self.model(features)
+            return (
+                lam * self.criterion(logits, label_a)
+                + (1.0 - lam) * self.criterion(logits, label_b)
+            )
+        logits = self.model(features)
+        return self.criterion(logits, labels)
 
     # ------------------------------------------------------------------
     def _train_epoch(self, loader: DataLoader) -> float:
@@ -99,14 +158,12 @@ class Trainer:
 
             if self.mixed_precision:
                 with torch.amp.autocast("cuda"):
-                    logits = self.model(features)
-                    loss = self.criterion(logits, labels)
+                    loss = self._compute_loss(features, labels)
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
             else:
-                logits = self.model(features)
-                loss = self.criterion(logits, labels)
+                loss = self._compute_loss(features, labels)
                 loss.backward()
                 self.optimizer.step()
 

@@ -54,6 +54,25 @@ experiments:
     training: "configs/training/frozen_extraction.yaml"
     fold: 0
 
+  # --- Stage 1: Fine-tune wide, official split, fold 0 ---
+  - id: "10_triple_concat_finetune_wide_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/triple_concat.yaml"
+    training: "configs/training/finetune_wide.yaml"
+    fold: 0
+
+  - id: "11_triple_weighted_finetune_wide_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/triple_weighted.yaml"
+    training: "configs/training/finetune_wide.yaml"
+    fold: 0
+
+  - id: "12_single_resnet50_finetune_wide_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/single_resnet50.yaml"
+    training: "configs/training/finetune_wide.yaml"
+    fold: 0
+
   # --- Legacy _own entries (not used for official reporting) ---
   - id: "01_single_resnet50_frozen_own"
     dataset: "configs/dataset/hyperkvasir_23class_own.yaml"

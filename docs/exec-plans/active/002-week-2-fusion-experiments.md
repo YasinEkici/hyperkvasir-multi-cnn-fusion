@@ -106,7 +106,10 @@ experiments work on one fold."
 ### Track B ⬜ Partially complete
 - `src/data/augmentation.py` — implement RandAugment and CutMix ✅
 - `tests/test_augmentation.py` — 18 tests, all pass ✅
-- `src/training/ema.py` — implement EMA class
+- `src/training/ema.py` — implement EMA class ✅
+- `tests/test_ema.py` — 15 tests, all pass ✅
+- `src/training/optimizers.py` — complete `build_adamw_with_llrd` with per-block groups ✅
+- `tests/test_llrd.py` — 26 tests, all pass ✅
 - `src/training/optimizers.py` — complete `build_adamw_with_llrd` per-layer grouping
 - `scripts/train.py` — add fine-tune image-based training path
 - `configs/experiment_matrix.yaml` — add entries 10–12
@@ -201,85 +204,54 @@ from actual clipped area. Returns (mixed, label_a, label_b, lam). 18/18 tests pa
 full suite 50 passed.*
 
 
-### ⬜ Step 5 — Implement EMA (src/training/ema.py)
+### ✅ Step 5 — Implement EMA (src/training/ema.py)
+*Done 2026-05-24. `EMA` class with `__init__(model, decay, start_epoch)`,
+`update(model, epoch)` (no-op when epoch < start_epoch), `apply(model)`
+(stores live-weight backup before swapping shadow in), `restore(model)`
+(restores backup; raises if called without prior apply). Shadow weights
+stored as `dict[str, Tensor]` via `named_parameters()` — BN buffers excluded.
+15/15 tests pass, full suite 65 passed.*
 
-```python
-class EMA:
-    def __init__(self, model: nn.Module, decay: float, start_epoch: int): ...
-    def update(self, model: nn.Module, epoch: int) -> None: ...
-    def apply(self, model: nn.Module) -> None:   # swap shadow weights in
-    def restore(self, model: nn.Module) -> None:  # swap original weights back
-```
+### ✅ Step 6 — Complete build_adamw_with_llrd (src/training/optimizers.py)
+*Done 2026-05-24. Per-block LLRD groups implemented for all three backbones using
+verified indices from project_structure.md §2.1–2.2. Empty groups skipped. Head
+params (projections, fusion, classifier) collected via id-tracking of backbone params.
+26/26 tests pass (no-double-count, full-coverage, no-empty-groups, group-count-by-unfreeze,
+deepest-block-LR, monotone-decay, head-LR, triple-backbone). Full suite: 91 passed.*
 
-Shadow weights stored as a plain `dict[str, Tensor]`. Updated only when
-`epoch >= start_epoch`. Add `tests/test_ema.py`: after many updates, shadow weights
-must be close to model weights; after `apply`→`restore`, original weights must be
-byte-identical to pre-apply state.
+### ✅ Step 7 — Add fine-tuning code path to scripts/train.py
+*Done 2026-05-24. Branches in main() on unfreeze_blocks > 0. Fine-tune path:
+MultiCNNFusionClassifier, _make_image_loaders (Resize→RandomCrop/CenterCrop→
+RandAugment→ToTensor→Normalize), WeightedRandomSampler, build_adamw_with_llrd
+when backbone_lr set, EMA gated on ema.enabled (apply/restore guarded against
+pre-start_epoch use), CutMix in _compute_loss helper (gated on cutmix_prob > 0).
+best.pt = EMA weights, last.pt = live weights, ema.pt = shadow dict. Frozen path
+untouched. 13/13 trainer smoke tests pass, full suite 104 passed.*
 
-### ⬜ Step 6 — Complete build_adamw_with_llrd (src/training/optimizers.py)
+### ✅ Step 8 — Add fine-tune experiment entries to experiment_matrix.yaml
+*Done 2026-05-24. Experiments 10, 11, 12 added under "Stage 1: Fine-tune wide" comment.
+All 9 config paths verified to exist. YAML parses cleanly (16 total entries). 104 tests pass.*
 
-Replace the flat backbone/head split with per-block parameter groups. Use block
-structure from `project_structure.md §2.2`:
 
-- ResNet50: head → layer4 → layer3 → layer2 → layer1 → stem
-- MobileNetV2: head → features[15:] → features[13:15] → features[1:13] → features[0]
-- EfficientNetB0: head → features[6:9] → features[4:6] → features[1:4] → features[0]
+### ✅ Step 9 — Run fine-tune experiments + update observability
+*Done 2026-05-24–25. All three fine-tune experiments completed. No VRAM issues (RTX 5080
+handled batch_size=64 with 3 unfrozen backbones). Two EMA bugs found and fixed during
+this step: (1) shadow tensors initialised on CPU but model moved to CUDA inside Trainer —
+fixed with lazy device migration in `EMA.update()`; (2) shadow held random-init weights
+at first activation (decay=0.999 over 5 epochs → <0.5% signal) — fixed with `reset_shadow()`
+warm-start called once in `fit()` at the epoch EMA first becomes active.*
 
-LR for block at depth index `d` (0 = deepest, adjacent to head):
-`backbone_lr * (llrd_decay ** d)`. Projection layers use `head_lr`.
+*Results (test set, fold 0):*
 
-Test: every `requires_grad` parameter appears in exactly one group; group count matches
-expected block count; deepest block LR equals `backbone_lr`.
+| ID | Method | Fusion | Mode | Acc | Macro F1 |
+|---|---|---|---|---:|---:|
+| 10 | R+M+E | concat | finetune-3blk | **0.8784** | **0.5796** |
+| 11 | R+M+E | weighted | finetune-3blk | 0.8685 | 0.5751 |
+| 12 | R | — | finetune-3blk | 0.8501 | 0.5748 |
 
-### ⬜ Step 7 — Add fine-tuning code path to scripts/train.py
-
-Branch in `main()` on `unfreeze_blocks > 0`:
-
-- Build `MultiCNNFusionClassifier`.
-- Image-based `DataLoader` using `HyperKvasirImageDataset` with augmentation pipeline
-  (RandAugment at train time, none at val/test). `WeightedRandomSampler` enabled.
-- `build_adamw_with_llrd` when `optimizer.backbone_lr` is set, else `build_optimizer`.
-- `EMA` instantiated when `ema.enabled = true`; `apply()` before eval/checkpoint,
-  `restore()` after. Save `ema.pt` separately.
-- CutMix applied in `_train_epoch` when `augmentation.cutmix.prob > 0`.
-- Frozen code path untouched.
-
-### ⬜ Step 8 — Add fine-tune experiment entries to experiment_matrix.yaml
-
-```yaml
-- id: "10_triple_concat_finetune_wide_official"
-  dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
-  method: "configs/method/triple_concat.yaml"
-  training: "configs/training/finetune_wide.yaml"
-  fold: 0
-
-- id: "11_triple_weighted_finetune_wide_official"
-  dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
-  method: "configs/method/triple_weighted.yaml"
-  training: "configs/training/finetune_wide.yaml"
-  fold: 0
-
-- id: "12_single_resnet50_finetune_wide_official"
-  dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
-  method: "configs/method/single_resnet50.yaml"
-  training: "configs/training/finetune_wide.yaml"
-  fold: 0
-```
-
-### ⬜ Step 9 — Run fine-tune experiments + update observability
-
-Run 10, 11, 12 in order. Monitor GPU memory (RTX 5080, 16 GB VRAM).
-Reduce `batch_size` if VRAM exceeded; document in `docs/known_issues.md`.
-
-**Immediately after all three complete:**
-
-```bash
-uv run python scripts/generate_report_tables.py
-uv run python scripts/plot_results.py --confusion-matrix
-```
-
-Then update `docs/results_progress.md` — fine-tune results table, key findings,
-and figures subsection. This update is a **hard acceptance gate** for Step 9.
+*`generate_report_tables.py` → 12 rows written. `plot_results.py --confusion-matrix` →
+confusion matrices for all 12 experiments + per-class F1 chart for best (exp 10).
+`docs/results_progress.md` fine-tune section populated — acceptance gate passed.*
 
 ### ⬜ Step 10 — Final test suite
 
