@@ -1,24 +1,78 @@
 experiments:
+  # --- Stage 0 / 1: Frozen extraction, official split, fold 0 ---
   - id: "01_single_resnet50_frozen_official"
     dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
     method: "configs/method/single_resnet50.yaml"
     training: "configs/training/frozen_extraction.yaml"
     fold: 0
+
+  - id: "02_single_mobilenetv2_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/single_mobilenetv2.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+
+  - id: "03_single_efficientnetb0_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/single_efficientnetb0.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+
+  - id: "04_triple_concat_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/triple_concat.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+
+  - id: "05_pair_r_m_concat_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/pair_r_m_concat.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+
+  - id: "06_pair_r_e_concat_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/pair_r_e_concat.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+
+  - id: "07_pair_m_e_concat_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/pair_m_e_concat.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+
+  - id: "08_triple_concat_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/triple_concat.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+
+  - id: "09_triple_weighted_frozen_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/triple_weighted.yaml"
+    training: "configs/training/frozen_extraction.yaml"
+    fold: 0
+
+  # --- Legacy _own entries (not used for official reporting) ---
   - id: "01_single_resnet50_frozen_own"
     dataset: "configs/dataset/hyperkvasir_23class_own.yaml"
     method: "configs/method/single_resnet50.yaml"
     training: "configs/training/frozen_extraction.yaml"
     fold: 0
+
   - id: "02_single_mobilenetv2_frozen_own"
     dataset: "configs/dataset/hyperkvasir_23class_own.yaml"
     method: "configs/method/single_mobilenetv2.yaml"
     training: "configs/training/frozen_extraction.yaml"
     fold: 0
+
   - id: "03_single_efficientnetb0_frozen_own"
     dataset: "configs/dataset/hyperkvasir_23class_own.yaml"
     method: "configs/method/single_efficientnetb0.yaml"
     training: "configs/training/frozen_extraction.yaml"
     fold: 0
+
   - id: "04_triple_concat_frozen_own"
     dataset: "configs/dataset/hyperkvasir_23class_own.yaml"
     method: "configs/method/triple_concat.yaml"
