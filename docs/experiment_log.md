@@ -224,3 +224,64 @@ Zero-support classes: none in any run. No NaN values in any run.
   `results/figures/per_class_f1_best.png`.
 - `docs/results_progress.md` fine-tune section populated (Step 9 acceptance gate passed).
 - Full suite: 104 passed.
+
+## 2026-05-25 — Week 2 Step 10: Final test suite
+
+- Command: `uv run pytest tests/ -v`
+- Result: **104 passed** in 10.93 s — no regressions.
+- Test files verified:
+  - `test_augmentation.py` — 18 tests (RandAugment + CutMix)
+  - `test_backbones.py` — 12 tests (dimensions, freeze, BN eval)
+  - `test_data_splits.py` — 4 tests (manifest, leakage, transform)
+  - `test_ema.py` — 15 tests (init, formula, apply/restore, guards)
+  - `test_feature_cache.py` — 1 test (e2e cache build)
+  - `test_finetune_trainer.py` — 13 tests (EMA, CutMix, fit smoke)
+  - `test_frozen_head.py` — 10 tests (single/pair/triple shapes)
+  - `test_fusion_modules.py` — 3 tests (concat + weighted)
+  - `test_llrd.py` — 26 tests (coverage, no-overlap, LR monotonicity)
+  - `test_metrics.py` — 1 test (statistical imports)
+  - `test_smoke_train.py` — 1 test (entrypoint placeholders)
+
+## 2026-05-25 — Week 2 Step 11: Final documentation + Week 2 close-out
+
+### Week 2 summary
+
+Week 2 delivered the full Stage 0 + Stage 1 mandatory ablation on fold 0 of the
+official HyperKvasir 5-fold split. All required components were implemented and
+all 12 experiments completed without NaN values or zero-support classes.
+
+**Infrastructure delivered:**
+- Augmentation: `apply_rand_augment` + `apply_cutmix` (`src/data/augmentation.py`)
+- EMA with warm-start + lazy device migration (`src/training/ema.py`)
+- Per-block LLRD optimizer (`src/training/optimizers.py`)
+- Fine-tune image-based training path (`scripts/train.py`, `src/training/trainer.py`)
+- Ablation table generator (`scripts/generate_report_tables.py`)
+- Visualisation: confusion matrices + per-class F1 chart (`scripts/plot_results.py`,
+  `src/evaluation/visualization.py`)
+- `docs/results_progress.md` created and fully populated through fine-tune batch
+
+**Final experiment results (test set, fold 0):**
+
+| ID | Method | Fusion | Mode | Acc | Macro F1 |
+|---|---|---|---|---:|---:|
+| 01 | ResNet50 | — | frozen | 0.8402 | 0.5588 |
+| 02 | MobileNetV2 | — | frozen | 0.8483 | 0.5502 |
+| 03 | EfficientNetB0 | — | frozen | 0.8591 | 0.5586 |
+| 04/08 | R+M+E | concat | frozen | 0.8567 | 0.5630 |
+| 05 | R+M | concat | frozen | 0.8247 | 0.5438 |
+| 06 | R+E | concat | frozen | 0.8388 | 0.5464 |
+| 07 | M+E | concat | frozen | 0.8728 | 0.5758 |
+| 09 | R+M+E | weighted | frozen | 0.8549 | 0.5609 |
+| 10 | R+M+E | concat | finetune-3blk | **0.8784** | **0.5796** |
+| 11 | R+M+E | weighted | finetune-3blk | 0.8685 | 0.5751 |
+| 12 | ResNet50 | — | finetune-3blk | 0.8501 | 0.5748 |
+
+**Key findings:**
+- Best overall: triple concat fine-tune (acc=0.8784, F1=0.5796).
+- Fine-tuning consistently improves over frozen for all configs tested.
+- M+E pair is the best frozen configuration; adding ResNet50 features in frozen
+  setting reduces F1 (noise from 2048-dim frozen features).
+- Weighted fusion does not outperform concat on fold 0 in either regime;
+  5-fold CV in Week 3 will determine whether this is a fold-0 artefact.
+
+**Test suite at close:** 104 passed.
