@@ -17,14 +17,18 @@ import numpy as np
 import torch
 import torch.nn as nn
 import yaml
-from torch.utils.data import DataLoader, TensorDataset, WeightedRandomSampler
+from torch.utils.data import DataLoader, Dataset, TensorDataset, WeightedRandomSampler
+from torchvision import transforms
 
+from src.data.datasets import HyperKvasirImageDataset
 from src.data.feature_cache import cache_frozen_features
 from src.data.manifests import read_manifest_csv
 from src.models.classifiers import MLPClassifier
+from src.models.full_model import MultiCNNFusionClassifier
 from src.models.projections import BranchProjection
+from src.training.ema import EMA
 from src.training.losses import build_loss
-from src.training.optimizers import build_optimizer
+from src.training.optimizers import build_adamw_with_llrd, build_optimizer
 from src.training.schedulers import build_scheduler
 from src.training.trainer import Trainer
 from src.utils.checkpointing import load_checkpoint
@@ -105,7 +109,7 @@ class FrozenHeadModel(nn.Module):
 
 
 # ---------------------------------------------------------------------------
-# Feature loading helpers
+# Feature loading helpers (frozen path)
 # ---------------------------------------------------------------------------
 
 def _load_split_features(
@@ -116,9 +120,8 @@ def _load_split_features(
     dataset_config: dict,
     batch_size: int,
     device: str,
-) -> dict[str, tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
+) -> dict[str, tuple[torch.Tensor, torch.Tensor]]:
     """Return train/val/test (features, labels) tensors, building cache if needed."""
-    # Read fold manifest to get per-split row indices
     rows = read_manifest_csv(fold_manifest)
     split_indices: dict[str, list[int]] = {"train": [], "val": [], "test": []}
     for i, row in enumerate(rows):
@@ -126,7 +129,6 @@ def _load_split_features(
         if split in split_indices:
             split_indices[split].append(i)
 
-    # Validate all expected cache files exist; build missing ones
     missing_backbones = [
         name
         for name in backbone_names
@@ -150,7 +152,6 @@ def _load_split_features(
             device=device,
         )
 
-    # Load and concatenate features across backbones for each split
     per_backbone: list[torch.Tensor] = []
     labels_tensor: torch.Tensor | None = None
 
@@ -162,9 +163,9 @@ def _load_split_features(
             labels_tensor = cache["labels"]
 
     assert labels_tensor is not None
-    all_features = torch.cat(per_backbone, dim=1)  # [N, sum(dims)]
+    all_features = torch.cat(per_backbone, dim=1)
 
-    result: dict[str, tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = {}
+    result: dict[str, tuple[torch.Tensor, torch.Tensor]] = {}
     for split_name, idxs in split_indices.items():
         if not idxs:
             continue
@@ -200,6 +201,104 @@ def _make_loader(
 
 
 # ---------------------------------------------------------------------------
+# Image DataLoader helpers (fine-tune path)
+# ---------------------------------------------------------------------------
+
+class _PairDataset(Dataset):
+    """Strips the row-dict from HyperKvasirImageDataset, returning (image, label)."""
+
+    def __init__(self, base: HyperKvasirImageDataset) -> None:
+        self.base = base
+
+    def __len__(self) -> int:
+        return len(self.base)
+
+    def __getitem__(self, i: int) -> tuple[object, int]:
+        img, label, _ = self.base[i]
+        return img, label
+
+
+def _make_image_loaders(
+    fold_manifest: Path,
+    dataset_cfg: dict,
+    training_cfg: dict,
+    root: Path,
+    batch_size: int,
+) -> tuple[DataLoader, DataLoader, DataLoader]:
+    """Build train / val / test image DataLoaders for fine-tuning.
+
+    Train loader: RandAugment + optional horizontal flip + WeightedRandomSampler.
+    Val / test loaders: deterministic centre-crop, no augmentation.
+
+    Preprocessing follows project_structure.md §2.3:
+        Resize shortest edge to 256 → RandomCrop(224) train / CenterCrop(224) val.
+        ImageNet normalisation: mean=[0.485,0.456,0.406] std=[0.229,0.224,0.225].
+    """
+    rows = read_manifest_csv(fold_manifest)
+    split_rows: dict[str, list[dict]] = {"train": [], "val": [], "test": []}
+    for row in rows:
+        split = str(row.get("split", ""))
+        if split in split_rows:
+            split_rows[split].append(row)
+
+    mean: list[float] = dataset_cfg.get("normalize_mean", [0.485, 0.456, 0.406])
+    std: list[float] = dataset_cfg.get("normalize_std", [0.229, 0.224, 0.225])
+    image_size: int = int(dataset_cfg.get("image_size", 224))
+    resize_to: int = 256  # per project_structure.md §2.3
+
+    aug_cfg = training_cfg.get("augmentation", {})
+    ra_cfg = aug_cfg.get("rand_augment", {})
+    N: int = int(ra_cfg.get("N", 2))
+    M: int = int(ra_cfg.get("M", 9))
+    hflip: bool = bool(aug_cfg.get("horizontal_flip", True))
+
+    train_tfm_list: list = [
+        transforms.Resize(resize_to),
+        transforms.RandomCrop(image_size),
+    ]
+    if hflip:
+        train_tfm_list.append(transforms.RandomHorizontalFlip())
+    train_tfm_list += [
+        transforms.RandAugment(num_ops=N, magnitude=M),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+    ]
+    train_transform = transforms.Compose(train_tfm_list)
+
+    val_transform = transforms.Compose([
+        transforms.Resize(resize_to),
+        transforms.CenterCrop(image_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+    ])
+
+    use_sampler = dataset_cfg.get("class_imbalance_handling", "none") == "weighted_sampler"
+
+    def _loader(rows_subset: list[dict], transform, weighted: bool) -> DataLoader:
+        base = HyperKvasirImageDataset(rows_subset, transform=transform, project_root=root)
+        ds = _PairDataset(base)
+        sampler = None
+        if weighted:
+            label_list = [int(r["label"]) for r in rows_subset]
+            labels_t = torch.tensor(label_list, dtype=torch.long)
+            class_counts = torch.bincount(labels_t)
+            class_weights = 1.0 / class_counts.float().clamp(min=1)
+            sample_weights = class_weights[labels_t]
+            sampler = WeightedRandomSampler(sample_weights, len(sample_weights), replacement=True)
+        return DataLoader(ds, batch_size=batch_size, sampler=sampler, num_workers=0)
+
+    train_loader = _loader(split_rows["train"], train_transform, weighted=use_sampler)
+    val_loader = _loader(split_rows["val"], val_transform, weighted=False)
+    test_loader = _loader(split_rows["test"], val_transform, weighted=False)
+
+    logger.info(
+        "Image loaders — train: %d | val: %d | test: %d",
+        len(split_rows["train"]), len(split_rows["val"]), len(split_rows["test"]),
+    )
+    return train_loader, val_loader, test_loader
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -212,7 +311,6 @@ def main() -> None:
 
     root = project_root()
 
-    # Load experiment matrix
     with open(args.config, "r") as f:
         matrix = yaml.safe_load(f)
 
@@ -221,7 +319,6 @@ def main() -> None:
         raise SystemExit(f"Experiment '{args.experiment}' not found in {args.config}")
     exp = experiments[args.experiment]
 
-    # Load sub-configs
     with open(root / exp["dataset"], "r") as f:
         dataset_cfg = yaml.safe_load(f)
     with open(root / exp["method"], "r") as f:
@@ -239,16 +336,13 @@ def main() -> None:
     )
     logger.info("Device: %s | Experiment: %s | Fold: %d", device, args.experiment, fold)
 
-    # Resolve paths
     split_protocol = dataset_cfg.get("split_protocol", "hyperkvasir_official_5fold")
     fold_manifest = root / "data" / "splits" / split_protocol / f"fold_{fold}.csv"
     if not fold_manifest.exists():
         raise FileNotFoundError(f"Fold manifest not found: {fold_manifest}")
 
-    cache_dir = feature_cache_dir()
     run_dir = results_dir(args.experiment)
 
-    # Model config
     backbone_names: list[str] = method_cfg["backbone_names"]
     projection_dim: int = int(method_cfg.get("projection_dim", 512))
     fusion_type: str = method_cfg.get("fusion_type", "none")
@@ -256,50 +350,117 @@ def main() -> None:
     dropout: float = float(method_cfg.get("dropout", 0.3))
     num_classes: int = int(dataset_cfg["num_classes"])
 
-    # Training config
     epochs: int = int(training_cfg.get("epochs", 60))
     batch_size: int = int(training_cfg.get("batch_size", 64))
     mixed_precision: bool = bool(training_cfg.get("mixed_precision", False))
     early_stopping_patience: int = int(training_cfg.get("early_stopping", {}).get("patience", 8))
-    class_imbalance: str = dataset_cfg.get("class_imbalance_handling", "none")
+    unfreeze_blocks: int = int(training_cfg.get("unfreeze_blocks", 0))
 
-    # Load / build feature cache
-    logger.info("Loading features for fold %d from %s", fold, cache_dir)
-    split_data = _load_split_features(
-        backbone_names=backbone_names,
-        fold=fold,
-        cache_dir=cache_dir,
-        fold_manifest=fold_manifest,
-        dataset_config=dataset_cfg,
-        batch_size=batch_size,
-        device=device,
-    )
+    # ------------------------------------------------------------------
+    # Branch: frozen feature extraction vs. end-to-end fine-tuning
+    # ------------------------------------------------------------------
 
-    train_features, train_labels = split_data["train"]
-    val_features, val_labels = split_data["val"]
-    test_features, test_labels = split_data["test"]
+    if unfreeze_blocks > 0:
+        # ---- Fine-tune path ----
+        logger.info("Fine-tune mode: unfreeze_blocks=%d", unfreeze_blocks)
 
-    logger.info(
-        "Split sizes — train: %d | val: %d | test: %d",
-        len(train_labels), len(val_labels), len(test_labels),
-    )
+        train_loader, val_loader, test_loader = _make_image_loaders(
+            fold_manifest=fold_manifest,
+            dataset_cfg=dataset_cfg,
+            training_cfg=training_cfg,
+            root=root,
+            batch_size=batch_size,
+        )
 
-    use_sampler = class_imbalance == "weighted_sampler"
-    train_loader = _make_loader(train_features, train_labels, batch_size, weighted_sampler=use_sampler)
-    val_loader = _make_loader(val_features, val_labels, batch_size)
-    test_loader = _make_loader(test_features, test_labels, batch_size)
+        model = MultiCNNFusionClassifier(
+            backbone_names=backbone_names,
+            unfreeze_blocks=unfreeze_blocks,
+            projection_dim=projection_dim,
+            fusion_type=fusion_type,
+            num_classes=num_classes,
+            mlp_hidden=mlp_hidden,
+            dropout=dropout,
+        )
 
-    # Build lightweight frozen head model
-    model = FrozenHeadModel(
-        backbone_names=backbone_names,
-        projection_dim=projection_dim,
-        fusion_type=fusion_type,
-        num_classes=num_classes,
-        mlp_hidden=mlp_hidden,
-        dropout=dropout,
-    )
+        opt_cfg = training_cfg.get("optimizer", {})
+        if opt_cfg.get("backbone_lr"):
+            optimizer = build_adamw_with_llrd(
+                model,
+                head_lr=float(opt_cfg["head_lr"]),
+                backbone_lr=float(opt_cfg["backbone_lr"]),
+                weight_decay=float(opt_cfg.get("weight_decay", 1e-4)),
+                llrd_decay=float(opt_cfg.get("llrd_decay", 0.75)),
+            )
+        else:
+            optimizer = build_optimizer(model, opt_cfg)
 
-    optimizer = build_optimizer(model, training_cfg.get("optimizer", {}))
+        ema_cfg = training_cfg.get("ema", {})
+        ema: EMA | None = None
+        if ema_cfg.get("enabled", False):
+            ema = EMA(
+                model,
+                decay=float(ema_cfg.get("decay", 0.999)),
+                start_epoch=int(ema_cfg.get("start_epoch", 0)),
+            )
+            logger.info(
+                "EMA enabled: decay=%.4f, start_epoch=%d",
+                ema.decay, ema.start_epoch,
+            )
+
+        aug_cfg = training_cfg.get("augmentation", {})
+        cutmix_cfg = aug_cfg.get("cutmix", {})
+        cutmix_prob: float = float(cutmix_cfg.get("prob", 0.0))
+        cutmix_alpha: float = float(cutmix_cfg.get("alpha", 1.0))
+
+    else:
+        # ---- Frozen feature extraction path (original, untouched) ----
+        logger.info("Frozen mode: using cached features")
+
+        cache_dir = feature_cache_dir()
+        logger.info("Loading features for fold %d from %s", fold, cache_dir)
+        split_data = _load_split_features(
+            backbone_names=backbone_names,
+            fold=fold,
+            cache_dir=cache_dir,
+            fold_manifest=fold_manifest,
+            dataset_config=dataset_cfg,
+            batch_size=batch_size,
+            device=device,
+        )
+
+        train_features, train_labels = split_data["train"]
+        val_features, val_labels = split_data["val"]
+        test_features, test_labels = split_data["test"]
+
+        logger.info(
+            "Split sizes — train: %d | val: %d | test: %d",
+            len(train_labels), len(val_labels), len(test_labels),
+        )
+
+        class_imbalance: str = dataset_cfg.get("class_imbalance_handling", "none")
+        use_sampler = class_imbalance == "weighted_sampler"
+        train_loader = _make_loader(train_features, train_labels, batch_size, weighted_sampler=use_sampler)
+        val_loader = _make_loader(val_features, val_labels, batch_size)
+        test_loader = _make_loader(test_features, test_labels, batch_size)
+
+        model = FrozenHeadModel(
+            backbone_names=backbone_names,
+            projection_dim=projection_dim,
+            fusion_type=fusion_type,
+            num_classes=num_classes,
+            mlp_hidden=mlp_hidden,
+            dropout=dropout,
+        )
+
+        optimizer = build_optimizer(model, training_cfg.get("optimizer", {}))
+        ema = None
+        cutmix_prob = 0.0
+        cutmix_alpha = 0.0
+
+    # ------------------------------------------------------------------
+    # Shared: scheduler, criterion, trainer, training loop
+    # ------------------------------------------------------------------
+
     steps_per_epoch = max(1, len(train_loader))
     scheduler = build_scheduler(
         optimizer,
@@ -319,9 +480,11 @@ def main() -> None:
         num_classes=num_classes,
         early_stopping_patience=early_stopping_patience,
         mixed_precision=mixed_precision,
+        ema=ema,
+        cutmix_alpha=cutmix_alpha,
+        cutmix_prob=cutmix_prob,
     )
 
-    # Train
     logger.info("Starting training — %d epochs, patience %d", epochs, early_stopping_patience)
     history = trainer.fit(train_loader, val_loader, epochs)
 
@@ -338,7 +501,6 @@ def main() -> None:
         test_metrics["zero_support_classes"],
     )
 
-    # Save outputs
     final_metrics = {
         "experiment_id": args.experiment,
         "fold": fold,
@@ -355,7 +517,6 @@ def main() -> None:
         labels=labels_arr,
     )
 
-    # Save a copy of the resolved config for reproducibility
     combined_cfg = {
         "experiment": exp,
         "dataset": dataset_cfg,

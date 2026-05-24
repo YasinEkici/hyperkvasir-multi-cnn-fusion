@@ -1,0 +1,13 @@
+experiment_id,backbone_names,fusion_type,mode,fold,accuracy,macro_f1,macro_precision,macro_recall,stop_epoch
+01_single_resnet50_frozen_official,resnet50,none,frozen,0,0.8402450518378888,0.5587565312936479,0.5674938011419726,0.5637730454862568,16
+02_single_mobilenetv2_frozen_official,mobilenetv2,none,frozen,0,0.8482563619227145,0.5501995713390727,0.5618243338784956,0.5567473236497231,21
+03_single_efficientnetb0_frozen_official,efficientnetb0,none,frozen,0,0.8590951932139491,0.5585899908948067,0.5690120328211957,0.5656938348169521,16
+04_triple_concat_frozen_official,"resnet50, mobilenetv2, efficientnetb0",concat,frozen,0,0.8567389255419415,0.5630161824970031,0.580193859043819,0.5618373021025104,20
+05_pair_r_m_concat_frozen_official,"resnet50, mobilenetv2",concat,frozen,0,0.824693685202639,0.5437686916031736,0.5575922628482753,0.5557146183832188,14
+06_pair_r_e_concat_frozen_official,"resnet50, efficientnetb0",concat,frozen,0,0.8388312912346843,0.5464128714531205,0.5557946491499138,0.5693934430247714,11
+07_pair_m_e_concat_frozen_official,"mobilenetv2, efficientnetb0",concat,frozen,0,0.8727615457115928,0.5757809396749961,0.5835370143206474,0.577550954100162,21
+08_triple_concat_frozen_official,"resnet50, mobilenetv2, efficientnetb0",concat,frozen,0,0.8567389255419415,0.5630161824970031,0.580193859043819,0.5618373021025104,20
+09_triple_weighted_frozen_official,"resnet50, mobilenetv2, efficientnetb0",weighted,frozen,0,0.8548539114043355,0.5609399230205974,0.5700495272526103,0.571373805272476,12
+10_triple_concat_finetune_wide_official,"resnet50, mobilenetv2, efficientnetb0",concat,finetune-3blk,0,0.8784165881244109,0.5796278942817911,0.5813225469035901,0.5892947558367027,14
+11_triple_weighted_finetune_wide_official,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,0,0.8685202639019792,0.5751019319714107,0.5737396732596458,0.5976166655729132,12
+12_single_resnet50_finetune_wide_official,resnet50,none,finetune-3blk,0,0.8501413760603205,0.5748260887032203,0.5690219930692308,0.5995350737407553,12
