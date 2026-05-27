@@ -1,0 +1,17 @@
+{
+  "experiment": "11_triple_weighted_finetune_wide_official",
+  "folds_used": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "metric": "macro_f1",
+  "point_estimate": 0.6000307984737925,
+  "ci_low": 0.5813887855557262,
+  "ci_high": 0.6205892983046853,
+  "n_bootstrap": 1000,
+  "ci": 0.95,
+  "n_samples": 10662
+}

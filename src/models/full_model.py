@@ -52,6 +52,10 @@ class MultiCNNFusionClassifier(nn.Module):
             from src.models.fusion.weighted import FusionModule as WeightedFusion
             self.fusion = WeightedFusion(num_branches=num_branches, feature_dim=projection_dim)
             fusion_out_dim = self.fusion.output_dim
+        elif fusion_type == "gmu":
+            from src.models.fusion.gmu import FusionModule as GMUFusion
+            self.fusion = GMUFusion(num_branches=num_branches, feature_dim=projection_dim)
+            fusion_out_dim = self.fusion.output_dim
         else:
             raise ValueError(f"Unsupported fusion type: {fusion_type}")
 

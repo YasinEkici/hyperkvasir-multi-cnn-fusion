@@ -1,0 +1,17 @@
+{
+  "experiment": "14_pair_m_e_finetune_wide_official",
+  "folds_used": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "metric": "macro_f1",
+  "point_estimate": 0.5759293023181461,
+  "ci_low": 0.5607582353536946,
+  "ci_high": 0.5926698740023787,
+  "n_bootstrap": 1000,
+  "ci": 0.95,
+  "n_samples": 10662
+}
