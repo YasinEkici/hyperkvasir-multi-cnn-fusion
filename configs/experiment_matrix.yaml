@@ -73,6 +73,25 @@ experiments:
     training: "configs/training/finetune_wide.yaml"
     fold: 0
 
+  # --- Stage 2: Week 3 additions ---
+  - id: "13_single_efficientnetb0_finetune_wide_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method:  "configs/method/single_efficientnetb0.yaml"
+    training: "configs/training/finetune_wide.yaml"
+    fold: 0
+
+  - id: "14_pair_m_e_finetune_wide_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method:  "configs/method/pair_m_e_concat.yaml"
+    training: "configs/training/finetune_wide.yaml"
+    fold: 0
+
+  - id: "15_triple_gmu_finetune_wide_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method:  "configs/method/triple_gmu.yaml"
+    training: "configs/training/finetune_wide.yaml"
+    fold: 0
+
   # --- Legacy _own entries (not used for official reporting) ---
   - id: "01_single_resnet50_frozen_own"
     dataset: "configs/dataset/hyperkvasir_23class_own.yaml"

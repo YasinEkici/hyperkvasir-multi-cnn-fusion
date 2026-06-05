@@ -124,19 +124,27 @@ Config: `finetune_wide.yaml` — unfreeze_blocks=3, LLRD (backbone_lr=1e-4, deca
 
 | Experiment | Backbones | Fusion | Mode | Acc | Macro F1 | Stop epoch |
 |---|---|---|---|---:|---:|---:|
+| `13_single_efficientnetb0_finetune_wide_official` | E | — | finetune-3blk | 0.8355 | 0.5539 | 13 |
+| `14_pair_m_e_finetune_wide_official` | M+E | concat | finetune-3blk | 0.8384 | 0.5522 | 13 |
 | `10_triple_concat_finetune_wide_official` | R+M+E | concat | finetune-3blk | **0.8784** | **0.5796** | 14 |
 | `11_triple_weighted_finetune_wide_official` | R+M+E | weighted | finetune-3blk | 0.8685 | 0.5751 | 12 |
 | `12_single_resnet50_finetune_wide_official` | R | — | finetune-3blk | 0.8501 | 0.5748 | 12 |
+| `15_triple_gmu_finetune_wide_official` | R+M+E | GMU | finetune-3blk | 0.8497 | 0.5645 | 14 |
 
 Zero-support classes: none in any run. No NaN values in any run.
 
-### Key findings (fine-tune regime, fold 0)
+### Key findings (fine-tune regime, fold 0) — updated after Step 4
 
 - **New best overall:** Triple concat fine-tune (10) — acc=0.8784, F1=0.5796, surpassing the best frozen config (07 M+E: acc=0.8728, F1=0.5758).
 - **Fine-tune vs. frozen (triple concat):** acc +0.0217, F1 +0.0166 — end-to-end gradient flow through unfrozen backbone blocks consistently improves both metrics.
 - **Weighted vs. concat (fine-tune):** concat (0.5796) still edges weighted (0.5751) — the expected advantage of learnable branch weights did not materialise on fold 0; 5-fold CV in Week 3 will determine if this holds.
 - **Single ResNet50 fine-tune (12):** F1 0.5748 — a large gain over its frozen counterpart (01: 0.5588), but still below all triple fine-tune configs. End-to-end fine-tuning rescues ResNet50 performance that was lost during frozen pair/triple concat.
-- **Early stopping:** All three fine-tune runs stopped in 12–14 epochs. Small dataset + high augmentation → fast plateau; longer training with lower decay or larger dataset expected to extend convergence.
+- **Early stopping:** All five fine-tune runs stopped in 12–14 epochs.
+- **Fine-tune hurts single E and pair M+E on fold 0 (Step 4 finding):** EfficientNetB0
+  fine-tune (0.5539) is below its frozen counterpart (0.5586 Δ−0.005); M+E fine-tune
+  (0.5522) is well below frozen M+E (0.5758, Δ−0.024). Both are fold-0 observations only.
+  CV config is unchanged — fine-tune will be run for all configs across folds 1–4;
+  fold-0 alone is not a valid basis for switching the training mode. Small dataset + high augmentation → fast plateau; longer training with lower decay or larger dataset expected to extend convergence.
 
 ### Figures produced (Steps 3d + 9)
 
@@ -158,15 +166,90 @@ Zero-support classes: none in any run. No NaN values in any run.
 - Selected 5-fold CV on: best single (E), best pair (M+E), triple concat, triple weighted, triple GMU
 - Bootstrap 95% CI for headline results
 
-### Results — Selected 5-fold CV — *pending*
+### Implementation milestones
 
-| Method | Fusion | Mode | Acc mean±std | F1 mean±std |
-|---|---|---|---|---|
-| EfficientNetB0 | — | best from W2 | — | — |
-| M+E | concat | best from W2 | — | — |
-| R+M+E | concat | best from W2 | — | — |
-| R+M+E | weighted | best from W2 | — | — |
-| R+M+E | GMU | best from W2 | — | — |
+| # | Component | File(s) |
+|---|---|---|
+| 1 | GMU fusion module (N-branch softmax generalization) | `src/models/fusion/gmu.py` |
+| 2 | GMU unit tests (12 tests) | `tests/test_gmu.py` |
+| 3 | `--fold` CLI override + fold-indexed run dir | `scripts/train.py` |
+| 4 | `bootstrap_ci` (percentile method, reproducible) | `src/evaluation/statistical.py` |
+| 5 | `run_cv.py` subprocess loop | `scripts/run_cv.py` |
+| 6 | `aggregate_cv.py` mean±std aggregation | `scripts/aggregate_cv.py` |
+| 7 | `compute_ci.py` concatenated-fold CI | `scripts/compute_ci.py` |
+| 8 | bootstrap_ci unit tests (9 tests) | `tests/test_statistical.py` |
+
+**Test suite:** 125 passed (Step 8 final verification: 2026-05-27, 24.82s, 0 failures).
+
+### Results — Selected 5-fold CV
+
+Config: `finetune_wide.yaml` — unfreeze_blocks=3, LLRD (backbone_lr=1e-4, decay=0.75), EMA (decay=0.999, start_epoch=5), CutMix (α=1.0, p=0.5), RandAugment (N=2, M=9), patience=8.
+
+| Exp | Method | Fusion | Mode | Acc mean±std | F1 mean±std |
+|---|---|---|---|---|---|
+| 13 | EfficientNetB0 | — | finetune-3blk | 0.8484 ± 0.0100 | 0.5690 ± 0.0158 |
+| 14 | M+E | concat | finetune-3blk | 0.8482 ± 0.0071 | 0.5670 ± 0.0089 |
+| 10 | R+M+E | concat | finetune-3blk | 0.8580 ± 0.0122 | 0.5691 ± 0.0064 |
+| 11 | R+M+E | weighted | finetune-3blk | **0.8706 ± 0.0042** | **0.5892 ± 0.0102** |
+| 15 | R+M+E | GMU | finetune-3blk | 0.8480 ± 0.0063 | 0.5672 ± 0.0049 |
+
+Zero-support classes: none in any fold. No NaN values in any fold.
+
+**Per-fold F1 breakdown:**
+
+| Exp | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 |
+|---|---:|---:|---:|---:|---:|
+| 13 | 0.5539 | 0.5981 | 0.5594 | 0.5606 | 0.5730 |
+| 14 | 0.5522 | 0.5731 | 0.5764 | 0.5717 | 0.5615 |
+| 10 | 0.5796 | 0.5709 | 0.5699 | 0.5610 | 0.5640 |
+| 11 | 0.5751 | **0.6014** | 0.5829 | 0.5860 | **0.6005** |
+| 15 | 0.5645 | 0.5625 | 0.5705 | 0.5634 | 0.5753 |
+
+### Bootstrap 95% CI
+
+Computed via `scripts/compute_ci.py` — concatenates `predictions.npz` from all 5 folds
+(n = 10,662 pooled samples) before bootstrapping (n_bootstrap=1000, seed=42).
+Point estimate = macro F1 on the full pooled set (size-weighted, not fold-mean).
+
+| Exp | Method | Fusion | F1 point | 95% CI lower | 95% CI upper | CI width |
+|---|---|---|---:|---:|---:|---:|
+| 10 | R+M+E | concat | 0.5708 | 0.5618 | 0.5799 | 0.0181 |
+| **11** | **R+M+E** | **weighted** | **0.6000** | **0.5814** | **0.6206** | **0.0392** |
+| 13 | E | — | 0.5730 | 0.5596 | 0.5873 | 0.0277 |
+| 14 | M+E | concat | 0.5759 | 0.5608 | 0.5927 | 0.0319 |
+| 15 | R+M+E | GMU | 0.5690 | 0.5580 | 0.5813 | 0.0233 |
+
+Saved to `results/tables/ci_{id}.json` for all 5 configs.
+
+**Key CI findings:**
+- **Exp 11 (weighted) CI lower bound (0.5814) is strictly above exp 10 (concat) upper bound
+  (0.5799):** the two CIs do not overlap. Triple weighted is statistically distinguishable
+  from triple concat at the 95% level on the pooled test set.
+- **Exp 15 (GMU) and exp 10 (concat) CIs heavily overlap** ([0.5580, 0.5813] vs.
+  [0.5618, 0.5799]): no statistical evidence that GMU and concat differ. The Δ=0.002
+  gap in CV mean F1 is within bootstrap noise.
+- **Exp 11 has the widest CI (0.0392):** its pooled F1=0.6000 is driven partly by
+  high-performing folds (1: 0.6014, 4: 0.6005), which also increases variance.
+- **All CIs are narrow relative to the gap between exp 11 and the rest:** the weakest
+  competitor (exp 15, upper=0.5813) does not reach exp 11's lower bound (0.5814).
+
+### Key findings (Week 3 — 5-fold CV)
+
+- **Best CV config: Triple weighted fine-tune (exp 11)** — F1 = 0.5892 ± 0.0102.
+  This reverses the fold-0 ranking (where concat 0.5796 > weighted 0.5751), confirming
+  fold-0 was an artefact for these two. Weighted fusion is decisively better over 5 folds.
+- **Fold-0 fine-tune anomaly for exps 13 and 14 resolved:** Both configs perform
+  competitively across folds (single E mean 0.5690, M+E mean 0.5670). Fold-0 was
+  the outlier, not the representative result.
+- **GMU does not surpass concat over 5 folds:** GMU mean F1 = 0.5672 ± 0.0049 vs.
+  concat 0.5691 ± 0.0064 (Δ = 0.002). GMU is a valid implementation but provides no
+  CV-level gain over simple concatenation in the fine-tune regime.
+- **Low CV variance for weighted and GMU** (std ≈ 0.004–0.010) indicates stable
+  training across official folds. Single E has the highest variance (std=0.0158),
+  driven by fold-1 outlier (0.5981).
+- **Ceiling comparison with literature:** GastroViT (F1≈0.64) uses a different protocol
+  (not official 5-fold split); direct comparison not valid. Best CV F1 here (0.5892)
+  is within the expected range for a 3-backbone MLP-only architecture on this dataset.
 
 ---
 

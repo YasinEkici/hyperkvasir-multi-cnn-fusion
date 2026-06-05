@@ -1,0 +1,6 @@
+backbone_names: ["resnet50", "mobilenetv2", "efficientnetb0"]
+projection_dim: 512
+fusion_type: "gmu"
+classifier: "mlp"
+mlp_hidden: [256]
+dropout: 0.3

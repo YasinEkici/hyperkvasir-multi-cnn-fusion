@@ -85,6 +85,10 @@ class FrozenHeadModel(nn.Module):
             from src.models.fusion.weighted import FusionModule
             self.fusion = FusionModule(num_branches=num_branches, feature_dim=projection_dim)
             fusion_out_dim = self.fusion.output_dim
+        elif fusion_type == "gmu":
+            from src.models.fusion.gmu import FusionModule
+            self.fusion = FusionModule(num_branches=num_branches, feature_dim=projection_dim)
+            fusion_out_dim = self.fusion.output_dim
         else:
             raise ValueError(f"Unsupported fusion_type: {fusion_type}")
 
@@ -307,6 +311,7 @@ def main() -> None:
     parser.add_argument("--config", required=True, help="Path to experiment_matrix.yaml")
     parser.add_argument("--experiment", required=True, help="Experiment ID to run")
     parser.add_argument("--device", default=None, help="Override device (cuda/cpu)")
+    parser.add_argument("--fold", type=int, default=None, help="Override fold index from experiment config")
     args = parser.parse_args()
 
     root = project_root()
@@ -326,7 +331,7 @@ def main() -> None:
     with open(root / exp["training"], "r") as f:
         training_cfg = yaml.safe_load(f)
 
-    fold: int = int(exp.get("fold", 0))
+    fold: int = args.fold if args.fold is not None else int(exp.get("fold", 0))
     device: str = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
     seed_all(
@@ -341,7 +346,12 @@ def main() -> None:
     if not fold_manifest.exists():
         raise FileNotFoundError(f"Fold manifest not found: {fold_manifest}")
 
-    run_dir = results_dir(args.experiment)
+    # fold 0 uses canonical path (backward compatible with existing fold-0 results);
+    # fold k >= 1 appends _fold_{k} so it doesn't overwrite the canonical directory.
+    if args.fold is not None and args.fold > 0:
+        run_dir = results_dir(f"{args.experiment}_fold_{args.fold}")
+    else:
+        run_dir = results_dir(args.experiment)
 
     backbone_names: list[str] = method_cfg["backbone_names"]
     projection_dim: int = int(method_cfg.get("projection_dim", 512))

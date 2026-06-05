@@ -9,5 +9,28 @@ experiment_id,backbone_names,fusion_type,mode,fold,accuracy,macro_f1,macro_preci
 08_triple_concat_frozen_official,"resnet50, mobilenetv2, efficientnetb0",concat,frozen,0,0.8567389255419415,0.5630161824970031,0.580193859043819,0.5618373021025104,20
 09_triple_weighted_frozen_official,"resnet50, mobilenetv2, efficientnetb0",weighted,frozen,0,0.8548539114043355,0.5609399230205974,0.5700495272526103,0.571373805272476,12
 10_triple_concat_finetune_wide_official,"resnet50, mobilenetv2, efficientnetb0",concat,finetune-3blk,0,0.8784165881244109,0.5796278942817911,0.5813225469035901,0.5892947558367027,14
+10_triple_concat_finetune_wide_official_fold_1,"resnet50, mobilenetv2, efficientnetb0",concat,finetune-3blk,1,0.8605089538171536,0.5708721405484336,0.5709439362986407,0.5897271702614578,16
+10_triple_concat_finetune_wide_official_fold_2,"resnet50, mobilenetv2, efficientnetb0",concat,finetune-3blk,2,0.8595664467483506,0.569913439983529,0.5635078628279635,0.5859226968621684,14
+10_triple_concat_finetune_wide_official_fold_3,"resnet50, mobilenetv2, efficientnetb0",concat,finetune-3blk,3,0.8430725730442978,0.5610010612850673,0.5653756920768085,0.5815758086657277,20
+10_triple_concat_finetune_wide_official_fold_4,"resnet50, mobilenetv2, efficientnetb0",concat,finetune-3blk,4,0.8482060717571297,0.5639583425484004,0.5599831773133357,0.5746803429734658,11
 11_triple_weighted_finetune_wide_official,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,0,0.8685202639019792,0.5751019319714107,0.5737396732596458,0.5976166655729132,12
+11_triple_weighted_finetune_wide_official_fold_1,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,1,0.8633364750235627,0.6014221801551554,0.5983169210554166,0.6466743935878965,13
+11_triple_weighted_finetune_wide_official_fold_2,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,2,0.8746465598491989,0.5829191035386393,0.5907455426803303,0.5928937800503625,14
+11_triple_weighted_finetune_wide_official_fold_3,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,3,0.8737040527803959,0.585954340426839,0.5863143000933634,0.5996622909517988,14
+11_triple_weighted_finetune_wide_official_fold_4,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,4,0.8725850965961361,0.6004733745584614,0.610869462001672,0.6111477163565577,14
 12_single_resnet50_finetune_wide_official,resnet50,none,finetune-3blk,0,0.8501413760603205,0.5748260887032203,0.5690219930692308,0.5995350737407553,12
+13_single_efficientnetb0_finetune_wide_official,efficientnetb0,none,finetune-3blk,0,0.8355325164938737,0.553864025010381,0.5691178222725973,0.5715809977872601,13
+13_single_efficientnetb0_finetune_wide_official_fold_1,efficientnetb0,none,finetune-3blk,1,0.8605089538171536,0.5980681038636605,0.5849068254192682,0.6511601682682082,15
+13_single_efficientnetb0_finetune_wide_official_fold_2,efficientnetb0,none,finetune-3blk,2,0.8421300659754948,0.559423912945947,0.558191051885571,0.5742123848719592,19
+13_single_efficientnetb0_finetune_wide_official_fold_3,efficientnetb0,none,finetune-3blk,3,0.8440150801131009,0.5605783850852201,0.562001666278667,0.5736004005043608,16
+13_single_efficientnetb0_finetune_wide_official_fold_4,efficientnetb0,none,finetune-3blk,4,0.859705611775529,0.5729581771357942,0.5757801588173469,0.5822550746727568,16
+14_pair_m_e_finetune_wide_official,"mobilenetv2, efficientnetb0",concat,finetune-3blk,0,0.8383600377002828,0.5521849837364409,0.5626748353155054,0.5736700581986849,13
+14_pair_m_e_finetune_wide_official_fold_1,"mobilenetv2, efficientnetb0",concat,finetune-3blk,1,0.8548539114043355,0.5730816666492602,0.5679681521519648,0.5984319120029638,20
+14_pair_m_e_finetune_wide_official_fold_2,"mobilenetv2, efficientnetb0",concat,finetune-3blk,2,0.8440150801131009,0.5763808118635398,0.580219403392557,0.6237932258123305,11
+14_pair_m_e_finetune_wide_official_fold_3,"mobilenetv2, efficientnetb0",concat,finetune-3blk,3,0.8576814326107446,0.5717079799113108,0.5728762913247616,0.5927304085480335,13
+14_pair_m_e_finetune_wide_official_fold_4,"mobilenetv2, efficientnetb0",concat,finetune-3blk,4,0.8459061637534498,0.561476588479305,0.5522724243377993,0.5895409181853938,16
+15_triple_gmu_finetune_wide_official,"resnet50, mobilenetv2, efficientnetb0",gmu,finetune-3blk,0,0.8496701225259189,0.5644914561964498,0.5642529104982479,0.5746084567678116,14
+15_triple_gmu_finetune_wide_official_fold_1,"resnet50, mobilenetv2, efficientnetb0",gmu,finetune-3blk,1,0.8393025447690857,0.5624918169512808,0.5554811956398614,0.585064028369244,13
+15_triple_gmu_finetune_wide_official_fold_2,"resnet50, mobilenetv2, efficientnetb0",gmu,finetune-3blk,2,0.8557964184731386,0.5704705449414404,0.5624426072251346,0.5908502081908881,13
+15_triple_gmu_finetune_wide_official_fold_3,"resnet50, mobilenetv2, efficientnetb0",gmu,finetune-3blk,3,0.8421300659754948,0.5634182110055359,0.5621963387093946,0.5813156299843434,16
+15_triple_gmu_finetune_wide_official_fold_4,"resnet50, mobilenetv2, efficientnetb0",gmu,finetune-3blk,4,0.8532658693652254,0.575296349235517,0.5665604961083621,0.5980166882478728,14
