@@ -10,7 +10,9 @@ must be implemented as a repository command under `scripts/`.
 - Branch: `week3.5/perf-colab`
 - Suggested Drive root: `/content/drive/MyDrive/hyperkvasir-multi-cnn-fusion`
 - Smoke experiment: `11_triple_weighted_finetune_wide_official`, fold 0
-- A100 training config: `configs/training/finetune_wide_a100.yaml`
+- Week 3.5 Step 3 experiment: `16_triple_weighted_finetune_focal_official`, folds 0-4
+- Focal training config: `configs/training/finetune_wide_focal.yaml`
+- A100 smoke config: `configs/training/finetune_wide_a100.yaml`
 
 The Drive root must use this layout:
 
@@ -63,25 +65,27 @@ uv run --no-sync python scripts/run_cv.py \
   --device cuda
 ```
 
-The later focal-loss command supplied for Step 3 is:
+The focal-loss command for Step 3 is:
 
 ```bash
 uv run --no-sync python scripts/run_cv.py \
   --experiment 16_triple_weighted_finetune_focal_official \
   --folds 0 1 2 3 4 \
-  --training configs/training/finetune_wide_a100.yaml \
+  --training configs/training/finetune_wide_focal.yaml \
   --device cuda
 ```
 
-Experiment 16 is intentionally not added in Step 1. It becomes runnable after
-the focal-loss implementation and experiment-matrix entry in Steps 2–3.
+Do not use `configs/training/finetune_wide_a100.yaml` for exp 16. That config
+switches the loss back to CE + label smoothing and invalidates the focal-loss
+ablation. Exp 16 must use `configs/training/finetune_wide_focal.yaml`, either
+through the experiment matrix or via the explicit `--training` override above.
 
 ## Session Resume
 
 Each fold is a separate subprocess and output directory. After a session drop,
 inspect `results/runs/`, set `FOLDS` to only the unfinished folds, and rerun the
-training cell. Do not rerun a completed fold because training output directories
-are not versioned.
+training cell. If you change `RUN_ID` for a resumed run, also rerun the resolved
+config and provenance cells so returned artifacts stay traceable.
 
 ## Returned Artifacts
 
