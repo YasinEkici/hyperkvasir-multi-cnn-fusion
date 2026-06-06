@@ -1,0 +1,1 @@
+# Generated with: uv pip freeze > env/pip-freeze.txt
