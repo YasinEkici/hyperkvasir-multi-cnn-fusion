@@ -53,6 +53,14 @@ The runner stops before training unless all conditions hold:
 
 Base files under `configs/` are never edited during a run.
 
+## Private Repository Clone
+
+If Colab fails with `fatal: could not read Username for 'https://github.com'`,
+the repository is private or GitHub requires authentication. Use the notebook's
+token prompt in cell 2. Create a fine-grained GitHub token with read-only
+`Contents` access to this repository, paste it when prompted, and leave the
+notebook cell source unchanged. Do not hard-code the token in the notebook.
+
 ## Commands
 
 Step 1 smoke test, run by the user on Colab:
