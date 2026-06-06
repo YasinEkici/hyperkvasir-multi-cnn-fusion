@@ -2,6 +2,19 @@
 
 Record successful runs and environment notes here.
 
+## 2026-06-05 - Week 3.5 Step 1 Colab Runner Infrastructure
+
+- Added the A100 exploration config with batch 128, linearly scaled learning
+  rates, and config-controlled cuDNN benchmark mode.
+- Added run-specific resolved-config, hard-stop provenance, and returned-output
+  collection commands under `scripts/`.
+- Added a narrow `--training` override to `run_cv.py` / `train.py`; experiment
+  matrix and base training configs remain unchanged.
+- Added the runner-only Colab notebook and documentation. The notebook defaults
+  to an existing exp 11 fold-0 smoke test; exp 16 remains deferred to Steps 2–3.
+- Pinned the provisional Colab environment to the official PyTorch CUDA 12.8
+  wheel pair. Real A100 validation is pending the user-run smoke test.
+
 ## 2026-05-22 - Week 1 Steps 1-3 Environment Setup
 
 - Ran `uv sync`; environment resolved and checked successfully.

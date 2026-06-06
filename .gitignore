@@ -207,6 +207,8 @@ results/*
 !results/tables/.gitkeep
 !results/figures/
 !results/figures/.gitkeep
+returned_outputs/
+.colab/
 
 # Literature source PDFs and extracted heavy assets
 references/**/original.pdf

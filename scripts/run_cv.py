@@ -25,6 +25,11 @@ def main() -> None:
     parser.add_argument(
         "--config", default="configs/experiment_matrix.yaml", help="Path to experiment_matrix.yaml"
     )
+    parser.add_argument(
+        "--training",
+        default=None,
+        help="Override the experiment's training config without mutating the matrix",
+    )
     parser.add_argument("--device", default=None, help="Override device (cuda/cpu)")
     args = parser.parse_args()
 
@@ -40,6 +45,8 @@ def main() -> None:
         ]
         if args.device:
             cmd += ["--device", args.device]
+        if args.training:
+            cmd += ["--training", args.training]
 
         sep = "=" * 60
         print(f"\n{sep}")

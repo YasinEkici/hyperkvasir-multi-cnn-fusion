@@ -312,6 +312,11 @@ def main() -> None:
     parser.add_argument("--experiment", required=True, help="Experiment ID to run")
     parser.add_argument("--device", default=None, help="Override device (cuda/cpu)")
     parser.add_argument("--fold", type=int, default=None, help="Override fold index from experiment config")
+    parser.add_argument(
+        "--training",
+        default=None,
+        help="Override the experiment's training config without mutating the matrix",
+    )
     args = parser.parse_args()
 
     root = project_root()
@@ -328,7 +333,8 @@ def main() -> None:
         dataset_cfg = yaml.safe_load(f)
     with open(root / exp["method"], "r") as f:
         method_cfg = yaml.safe_load(f)
-    with open(root / exp["training"], "r") as f:
+    training_path = args.training or exp["training"]
+    with open(root / training_path, "r") as f:
         training_cfg = yaml.safe_load(f)
 
     fold: int = args.fold if args.fold is not None else int(exp.get("fold", 0))
@@ -529,6 +535,7 @@ def main() -> None:
 
     combined_cfg = {
         "experiment": exp,
+        "training_config_path": training_path,
         "dataset": dataset_cfg,
         "method": method_cfg,
         "training": training_cfg,
