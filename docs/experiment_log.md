@@ -2,6 +2,31 @@
 
 Record successful runs and environment notes here.
 
+## 2026-06-06 - Week 3.5 Step 2 Focal Loss Implementation
+
+- Implemented `FocalLoss` in `src/training/losses.py` using the α-balanced
+  variant from Lin et al. 2017 (ICCV), eq. 5:
+  `FL(p_t) = -α_t (1 - p_t)^γ log(p_t)`.
+- Verbatim equation copied into `FocalLoss` docstring per AGENTS.md requirement.
+- Numerical stability via `F.cross_entropy(reduction='none')` for `log(p_t)`,
+  then `p_t = exp(-ce)` and `(1 - p_t)^γ` modulating factor. No manual
+  softmax + log.
+- Extended `build_loss` to support `type: "focal"` (γ-only, no class weighting)
+  and `type: "focal_balanced"` (γ + optional per-class α tensor).
+- Focal loss and label smoothing deliberately NOT combined (documented in
+  `FocalLoss` docstring and `docs/decisions.md` D-06).
+- Created `configs/training/finetune_wide_focal.yaml` — clone of
+  `finetune_wide.yaml` with only the loss block changed to `focal` (γ=2.0).
+  All other hyperparameters identical for a clean single-variable ablation.
+- Added exp 16 (`16_triple_weighted_finetune_focal_official`) to
+  `configs/experiment_matrix.yaml`.
+- Created `tests/test_focal_loss.py` — 29 tests covering:
+  γ=0 ≡ CE equivalence, focusing effect, α-vector shape/behavior,
+  numerical stability at extreme logits, gradient flow, reduction modes,
+  `build_loss` integration, and constructor validation.
+- Full test suite: **158 passed** (129 existing + 29 new), 0 failures.
+- No experiment results yet — training deferred to Step 3 on A100.
+
 ## 2026-06-05 - Week 3.5 Step 1 Colab Runner Infrastructure
 
 - Added the A100 exploration config with batch 128, linearly scaled learning

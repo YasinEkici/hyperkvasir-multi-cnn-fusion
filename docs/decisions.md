@@ -42,3 +42,25 @@ Project decisions are locked in `project_structure.md` and `project_plan.md`.
   sessions abort before training.
 - Runs missing any required provenance record are provisional/debug-only and
   cannot supply headline results.
+
+## 2026-06-06 - D-06: Focal Loss Added as Ablation
+
+- Focal loss (Lin et al. 2017, ICCV) is added as an additive ablation on top of
+  the Week 3 best config (exp 11, triple weighted fine-tune).
+- This is NOT a PLD change. `project_plan.md` §1 ("focal loss … meaningful") and
+  §9 risk register ("focal loss ablation") both anticipate it.
+- Implementation: `FocalLoss` in `src/training/losses.py` using the α-balanced
+  variant (paper eq. 5): `FL(p_t) = -α_t (1 - p_t)^γ log(p_t)`.
+- `build_loss` extended to support `type: "focal"` (γ-only, no class weighting)
+  and `type: "focal_balanced"` (γ + per-class α from inverse class frequency).
+- Focal loss and label smoothing are deliberately NOT combined. Label smoothing
+  modifies the target distribution, which conflicts with the focal modulating
+  factor that relies on the true-class probability p_t. The ablation config
+  (`finetune_wide_focal.yaml`) removes label smoothing to ensure a clean
+  comparison.
+- Default γ=2.0 (paper-recommended value).
+- Exp 16 (`16_triple_weighted_finetune_focal_official`) added to experiment
+  matrix. It uses `finetune_wide_focal.yaml` and differs from exp 11's
+  `finetune_wide.yaml` only in the loss block — all other hyperparameters
+  are identical for a single-variable ablation.
+- Week 3 CE runs (exp 11) are preserved unchanged for comparison.
