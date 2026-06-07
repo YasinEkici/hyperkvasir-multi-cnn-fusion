@@ -31,6 +31,9 @@ def main() -> None:
         help="Override the experiment's training config without mutating the matrix",
     )
     parser.add_argument("--device", default=None, help="Override device (cuda/cpu)")
+    parser.add_argument(
+        "--seed", type=int, default=None, help="Override reproducibility seed (forwarded to train.py)"
+    )
     args = parser.parse_args()
 
     train_script = str(_ROOT / "scripts" / "train.py")
@@ -47,6 +50,8 @@ def main() -> None:
             cmd += ["--device", args.device]
         if args.training:
             cmd += ["--training", args.training]
+        if args.seed is not None:
+            cmd += ["--seed", str(args.seed)]
 
         sep = "=" * 60
         print(f"\n{sep}")

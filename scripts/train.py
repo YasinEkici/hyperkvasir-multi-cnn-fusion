@@ -317,6 +317,13 @@ def main() -> None:
         default=None,
         help="Override the experiment's training config without mutating the matrix",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Override reproducibility seed; seeds other than 42 write to a "
+        "seed-tagged run dir ({exp}_seed{S}[_fold_{k}]) to avoid overwriting.",
+    )
     args = parser.parse_args()
 
     root = project_root()
@@ -340,24 +347,34 @@ def main() -> None:
     fold: int = args.fold if args.fold is not None else int(exp.get("fold", 0))
     device: str = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
 
+    repro_cfg = training_cfg.setdefault("reproducibility", {})
+    seed: int = args.seed if args.seed is not None else int(repro_cfg.get("seed", 42))
+    repro_cfg["seed"] = seed  # record the effective seed in the saved config
     seed_all(
-        int(training_cfg.get("reproducibility", {}).get("seed", 42)),
-        deterministic=training_cfg.get("reproducibility", {}).get("deterministic", True),
-        cudnn_benchmark=training_cfg.get("reproducibility", {}).get("cudnn_benchmark", False),
+        seed,
+        deterministic=repro_cfg.get("deterministic", True),
+        cudnn_benchmark=repro_cfg.get("cudnn_benchmark", False),
     )
-    logger.info("Device: %s | Experiment: %s | Fold: %d", device, args.experiment, fold)
+    logger.info(
+        "Device: %s | Experiment: %s | Fold: %d | Seed: %d", device, args.experiment, fold, seed
+    )
 
     split_protocol = dataset_cfg.get("split_protocol", "hyperkvasir_official_5fold")
     fold_manifest = root / "data" / "splits" / split_protocol / f"fold_{fold}.csv"
     if not fold_manifest.exists():
         raise FileNotFoundError(f"Fold manifest not found: {fold_manifest}")
 
-    # fold 0 uses canonical path (backward compatible with existing fold-0 results);
-    # fold k >= 1 appends _fold_{k} so it doesn't overwrite the canonical directory.
+    # Run-dir naming (backward compatible):
+    #   seed 42  -> canonical {exp}[_fold_{k}]   (existing Week 3 runs)
+    #   seed !=42 -> {exp}_seed{S}[_fold_{k}]    (new ensemble seeds, no overwrite)
+    #   fold 0 uses no _fold suffix; fold k>=1 appends _fold_{k}.
+    CANONICAL_SEED = 42
+    run_name = args.experiment
+    if seed != CANONICAL_SEED:
+        run_name = f"{run_name}_seed{seed}"
     if args.fold is not None and args.fold > 0:
-        run_dir = results_dir(f"{args.experiment}_fold_{args.fold}")
-    else:
-        run_dir = results_dir(args.experiment)
+        run_name = f"{run_name}_fold_{args.fold}"
+    run_dir = results_dir(run_name)
 
     backbone_names: list[str] = method_cfg["backbone_names"]
     projection_dim: int = int(method_cfg.get("projection_dim", 512))
