@@ -2,6 +2,36 @@
 
 Record successful runs and environment notes here.
 
+## 2026-06-07 - Week 3.5 Step 4 Test-Time Augmentation (TTA) — COMPLETE
+
+- Implemented `scripts/evaluate.py` (was a scaffold): TTA inference path that
+  reuses `MultiCNNFusionClassifier`, `load_checkpoint`, `HyperKvasirImageDataset`,
+  `compute_metrics`. Deterministic 4-view set — base (Resize256→CenterCrop224),
+  hflip, scale (Resize224→CenterCrop224), scale_hflip — averaging softmax per
+  image. Per-model, per-fold; no leakage. Writes `predictions_{base,tta}.npz` +
+  `metrics_{base,tta}.json` per run. INFERENCE ONLY (no training), run on local
+  RTX 5080 (`--device cuda`).
+- Added `tests/test_tta.py` (10 tests): view set (base-only vs 4-view, base first),
+  deterministic base transform, hflip ≡ torch.flip(base), aggregate identity/
+  shape/probs-sum-to-1/elementwise-mean/empty-raises. All pass.
+- Added `--predictions` arg to `compute_ci.py` and `compute_extra_metrics.py` so
+  they can pool `predictions_tta.npz`; TTA outputs written to separate
+  `*_tta.json` tables (base tables untouched).
+- Validation: `evaluate.py` base-only on fold 0 reproduced training `predictions.npz`
+  exactly (100% agreement, acc 0.8685 / macro-F1 0.5751) — confirms the rebuilt
+  inference path.
+- TTA on champion exp 11, all 5 folds. Per-fold macro-F1 (base→TTA): 0.5751→0.5827,
+  0.6014→0.6126, 0.5829→0.5808, 0.5860→0.6025, 0.6005→0.5987.
+- Pooled (n=10,662): TTA macro-F1 **0.6075** [0.5860, 0.6296], acc 0.8765,
+  weighted-F1 0.8761, MCC 0.8662 — vs base 0.6000 [0.5814, 0.6206], 0.8706,
+  0.8716, 0.8599.
+- **Verdict:** TTA improves every metric (new best point estimate 0.6075) but
+  within CI overlap → not statistically significant at 95%. Zero-cost, no
+  retraining, never lowers the aggregate. Recommended as the final inference
+  protocol for exp 11 (candidate best model for Step 7 freeze), reported honestly
+  as a within-CI uplift.
+- `docs/results_progress.md` Week 3.5 Step 4 section + "TTA vs base" verdict added.
+
 ## 2026-06-07 - Week 3.5 Step 3 Focal 5-Fold CV (exp 16) — COMPLETE
 
 - Ran exp `16_triple_weighted_finetune_focal_official` for folds 0–4 on **Colab

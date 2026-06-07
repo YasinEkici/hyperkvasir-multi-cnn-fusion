@@ -312,6 +312,57 @@ further gain on top of it. The residual bottleneck is the rare classes
 (support ≤ 10), which is a data-scarcity limit not solvable by reweighting the
 loss. CE label smoothing stays the recommended loss for this architecture.
 
+### Step 4 — Test-Time Augmentation (TTA) on the champion (exp 11)
+*Completed: 2026-06-07*
+
+Inference-time technique (no training). The champion checkpoint (exp 11, triple
+weighted CE) is run forward over each fold's held-out test set under a fixed,
+deterministic set of 4 views — `base` (Resize256→CenterCrop224), `hflip`,
+`scale` (Resize224→CenterCrop224), `scale_hflip` — and the **softmax is averaged**
+per image. Per-model, per-fold; no leakage, no cross-fold model averaging.
+Implemented in `scripts/evaluate.py`; run on the local RTX 5080.
+
+Validation: the `base`-only view reproduces the training-time `predictions.npz`
+exactly (100% prediction agreement on fold 0), confirming the inference path.
+
+Per-fold (test set):
+
+| Fold | base F1 | TTA F1 | Δ |
+|---|---:|---:|---:|
+| 0 | 0.5751 | 0.5827 | +0.0076 |
+| 1 | 0.6014 | 0.6126 | +0.0112 |
+| 2 | 0.5829 | 0.5808 | −0.0021 |
+| 3 | 0.5860 | 0.6025 | +0.0165 |
+| 4 | 0.6005 | 0.5987 | −0.0018 |
+
+### TTA vs base — head-to-head (exp 11)
+
+Pooled over all 5 folds (n = 10,662), bootstrap 95% CI (n_bootstrap=1000, seed=42):
+
+| Variant | Macro-F1 (pooled) | 95% CI | CV mean±std | Acc | Weighted-F1 | MCC |
+|---|---:|---|---|---:|---:|---:|
+| base (exp 11) | 0.6000 | [0.5814, 0.6206] | 0.5892 ± 0.0102 | 0.8706 | 0.8716 | 0.8599 |
+| **base + TTA** | **0.6075** | **[0.5860, 0.6296]** | 0.5955 ± 0.0121 | **0.8765** | **0.8761** | **0.8662** |
+| Δ (TTA − base) | +0.0075 | overlapping | +0.0063 | +0.0059 | +0.0045 | +0.0063 |
+
+Tables saved to `results/tables/ci_11_*_tta.json`, `extra_metrics_11_*_tta.json`;
+per-fold `predictions_tta.npz` / `metrics_tta.json` in `results/runs/11_*/`.
+
+### Verdict — TTA
+
+**TTA gives a small, consistent uplift on every metric (new pooled best point
+estimate macro-F1 = 0.6075), but it is NOT statistically significant at the 95%
+level — the TTA and base CIs overlap** ([0.5860, 0.6296] vs [0.5814, 0.6206]; each
+point estimate lies inside the other's interval).
+
+- Unlike focal (negative on all metrics), TTA improves macro-F1, accuracy,
+  weighted-F1 and MCC simultaneously, and never lowers the pooled aggregate.
+- It is a **zero-cost, training-free** inference add-on with no downside.
+- **Recommendation:** adopt TTA as the final inference protocol for the champion
+  (exp 11). It is the best-performing configuration by point estimate and is the
+  candidate "best model" to freeze in Step 7, while honestly noting the gain is
+  within CI overlap (not a statistically conclusive improvement over base).
+
 ---
 
 ## Week 4 — Analysis and Report

@@ -36,12 +36,14 @@ def _fold_run_dir(exp_id: str, fold: int) -> Path:
     return _ROOT / "results" / "runs" / f"{exp_id}_fold_{fold}"
 
 
-def load_pooled(exp_id: str, folds: list[int]) -> tuple[np.ndarray, np.ndarray, list[int]]:
+def load_pooled(
+    exp_id: str, folds: list[int], pred_file: str = "predictions.npz"
+) -> tuple[np.ndarray, np.ndarray, list[int]]:
     all_preds: list[np.ndarray] = []
     all_labels: list[np.ndarray] = []
     loaded: list[int] = []
     for fold in folds:
-        npz_path = _fold_run_dir(exp_id, fold) / "predictions.npz"
+        npz_path = _fold_run_dir(exp_id, fold) / pred_file
         if not npz_path.exists():
             print(f"[WARN] Fold {fold}: not found at {npz_path} - skipping.")
             continue
@@ -76,9 +78,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--experiment", required=True)
     parser.add_argument("--folds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
+    parser.add_argument(
+        "--predictions",
+        default="predictions.npz",
+        help="Per-fold predictions filename to pool (e.g. predictions_tta.npz)",
+    )
     args = parser.parse_args()
 
-    preds, labels, loaded = load_pooled(args.experiment, args.folds)
+    preds, labels, loaded = load_pooled(args.experiment, args.folds, args.predictions)
     metrics = compute_extra(preds, labels)
     metrics["experiment"] = args.experiment
     metrics["folds_used"] = loaded
@@ -92,9 +99,17 @@ def main() -> None:
           f"{metrics['weighted_recall']:.4f} / {metrics['weighted_f1']:.4f}")
     print(f"  MCC                 : {metrics['mcc']:.4f}")
 
+    metrics["predictions_file"] = args.predictions
+    pred_tag = Path(args.predictions).stem.replace("predictions", "").strip("_")
+
     out_dir = _ROOT / "results" / "tables"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"extra_metrics_{args.experiment}.json"
+    name = (
+        f"extra_metrics_{args.experiment}.json"
+        if not pred_tag
+        else f"extra_metrics_{args.experiment}_{pred_tag}.json"
+    )
+    out_path = out_dir / name
     with open(out_path, "w") as f:
         json.dump(metrics, f, indent=2)
     print(f"  saved -> {out_path}")
