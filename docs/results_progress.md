@@ -253,6 +253,67 @@ Saved to `results/tables/ci_{id}.json` for all 5 configs.
 
 ---
 
+## Week 3.5 — Performance Lift: Focal Loss Ablation
+*Completed: 2026-06-07 (Step 3)*
+
+Additive ablation (D-06): the Week 3 best config (exp 11, triple weighted
+fine-tune) re-run with **focal loss** (Lin et al. 2017, γ=2.0) instead of
+label-smoothed cross-entropy. Single-variable change — `finetune_wide_focal.yaml`
+differs from `finetune_wide.yaml` only in the loss block. Trained on **Colab
+A100** via the runner-only notebook (D-09 provenance gate passed). Original CE
+runs (exp 11) preserved unchanged for comparison.
+
+### Results — exp 16 focal 5-fold CV
+
+Per-fold (test set, official 5-fold split):
+
+| Fold | Acc | Macro F1 |
+|---|---:|---:|
+| 0 | 0.8582 | 0.5777 |
+| 1 | 0.8666 | 0.5847 |
+| 2 | 0.8648 | 0.5687 |
+| 3 | 0.8393 | 0.5741 |
+| 4 | 0.8726 | 0.5962 |
+
+Zero-support classes: none in any fold. No NaN values in any fold.
+
+CV summary: macro F1 = **0.5803 ± 0.0095**, accuracy = 0.8603 ± 0.0115,
+macro precision = 0.5765 ± 0.0070, macro recall = 0.6062 ± 0.0105.
+
+### Focal vs CE — head-to-head (single-variable ablation)
+
+Pooled over all 5 folds (n = 10,662), bootstrap 95% CI (n_bootstrap=1000, seed=42):
+
+| Exp | Loss | Macro-F1 (pooled) | 95% CI | CV mean±std | Acc | Weighted-F1 | MCC |
+|---|---|---:|---|---|---:|---:|---:|
+| **11** | **CE (label-smooth)** | **0.6000** | **[0.5814, 0.6206]** | 0.5892 ± 0.0102 | **0.8706** | **0.8716** | **0.8599** |
+| 16 | Focal (γ=2.0) | 0.5914 | [0.5750, 0.6096] | 0.5803 ± 0.0095 | 0.8603 | 0.8633 | 0.8489 |
+| Δ (focal − CE) | — | −0.0086 | overlapping | −0.0089 | −0.0103 | −0.0083 | −0.0110 |
+
+Tables saved to `results/tables/ci_16_*.json`, `cv_16_*_summary.json`,
+`extra_metrics_16_*.json`. Confusion matrices in `results/runs/16_*/`.
+
+### Verdict — new best vs Week 3 best
+
+**Focal loss did NOT beat cross-entropy. The Week 3 champion (exp 11, triple
+weighted CE, pooled macro-F1 0.6000) remains the project best.**
+
+- Focal's pooled point estimate (0.5914) is **below** CE (0.6000), and the two
+  CIs **heavily overlap** ([0.5750, 0.6096] vs [0.5814, 0.6206]) — the difference
+  is not statistically distinguishable at the 95% level.
+- Focal is also marginally lower on **every** secondary metric (accuracy,
+  weighted-F1, MCC), so there is no metric under which focal wins.
+- This is an honest **negative result**, anticipated by the risk register
+  (exec plan §7) and D-06. No test-set retuning was performed.
+
+**Interpretation (for report §5.5):** the weighted-sampler already addresses
+class imbalance upstream, and focal's modulating factor `(1−p_t)^γ` adds no
+further gain on top of it. The residual bottleneck is the rare classes
+(support ≤ 10), which is a data-scarcity limit not solvable by reweighting the
+loss. CE label smoothing stays the recommended loss for this architecture.
+
+---
+
 ## Week 4 — Analysis and Report
 *Planned: ~2026-06-01 to 2026-06-04*
 

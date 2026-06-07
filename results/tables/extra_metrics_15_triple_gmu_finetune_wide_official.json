@@ -1,0 +1,20 @@
+{
+  "accuracy": 0.8480585256049522,
+  "micro_f1": 0.8480585256049522,
+  "macro_precision": 0.5595751893753321,
+  "macro_recall": 0.5883496861788563,
+  "macro_f1": 0.5690446144180962,
+  "weighted_precision": 0.857722432830634,
+  "weighted_recall": 0.8480585256049522,
+  "weighted_f1": 0.8506599361894077,
+  "mcc": 0.8357702751381552,
+  "experiment": "15_triple_gmu_finetune_wide_official",
+  "folds_used": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "n_samples": 10662
+}

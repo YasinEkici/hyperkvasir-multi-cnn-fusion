@@ -2,6 +2,31 @@
 
 Record successful runs and environment notes here.
 
+## 2026-06-07 - Week 3.5 Step 3 Focal 5-Fold CV (exp 16) — COMPLETE
+
+- Ran exp `16_triple_weighted_finetune_focal_official` for folds 0–4 on **Colab
+  A100** via the runner-only notebook (D-09 provenance gate passed). GPU training
+  performed by the user; assistant ran CPU post-processing only.
+- Per-fold A100 timing: ~25–35 min/fold (~2 min/epoch, early-stop at epoch 12–17).
+- Per-fold test macro-F1: 0.5777 / 0.5847 / 0.5687 / 0.5741 / 0.5962.
+  No NaN, no zero-support classes in any fold.
+- Post-processing (CPU, local):
+  - `aggregate_cv.py` → macro-F1 0.5803 ± 0.0095, acc 0.8603 ± 0.0115.
+  - `compute_ci.py` → pooled macro-F1 0.5914, 95% CI [0.5750, 0.6096] (n=10,662).
+  - `compute_extra_metrics.py` (new) → acc/micro-F1 0.8603, weighted-F1 0.8633,
+    MCC 0.8489. Saved `results/tables/extra_metrics_16_*.json`.
+  - `plot_results.py --confusion-matrix` → 5 confusion matrices into
+    `results/runs/16_*/`; global comparison/training/per-class figures regenerated
+    over all experiments (per-class best remains exp 11 fold_1, F1=0.6014).
+- **Verdict: focal did NOT beat CE.** exp 16 pooled F1 0.5914 < exp 11 CE 0.6000;
+  CIs overlap; focal lower on every metric (acc, weighted-F1, MCC). Week 3 champion
+  (exp 11 triple weighted CE) stays the project best. Honest negative result per
+  D-06 / exec-plan §7. No test-set retuning.
+- `docs/results_progress.md` Week 3.5 section populated with the ablation table,
+  CI, and explicit "new best vs Week 3 best" verdict (acceptance gate passed).
+- Added `scripts/compute_extra_metrics.py` (MCC, micro/weighted F1 from saved
+  predictions; no retraining). Also computed for Week 3 configs 10/11/13/14/15.
+
 ## 2026-06-06 - Week 3.5 Step 2 Focal Loss Implementation
 
 - Implemented `FocalLoss` in `src/training/losses.py` using the α-balanced
