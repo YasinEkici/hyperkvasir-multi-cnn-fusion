@@ -1,0 +1,171 @@
+% =====================================================================
+% references.bib — Multi-CNN Feature Fusion (HyperKvasir)
+% Entries are transcribed from references/INDEX.md and verified against the
+% corresponding references/**/paper.md (the project's authoritative survey).
+% Per AGENTS.md: do NOT \cite a paper whose paper.md does not exist.
+%
+% paper.md BACKING STATUS (verified 2026-06-08):
+%   CITED + backed: borgli2020hyperkvasir, ramamurthy2022effimix, gastrovit2025,
+%     ahmed2023hybrid, arevalo2017gmu, lin2017focal, yun2019cutmix,
+%     loshchilov2019adamw, chattopadhyay2018gradcampp, mcinnes2018umap.
+%   CITED + backed via manual stub (foundational backbones, not tool-extracted —
+%     see references/methodology_backbones/*/paper.md and report_notes.md):
+%     he2016resnet, sandler2018mobilenetv2, tan2019efficientnet.
+%   PRESENT but NOT cited (no paper.md → must stay uncited): cubuk2020randaugment,
+%     dietterich1998mcnemar, bilal2025mcnnrf. RandAugment is named in text without
+%     \cite; the others are unused.
+% =====================================================================
+
+% --- Dataset --------------------------------------------------------
+@article{borgli2020hyperkvasir,
+  title   = {HyperKvasir, a comprehensive multi-class image and video dataset for gastrointestinal endoscopy},
+  author  = {Borgli, Hanna and others},
+  journal = {Scientific Data},
+  volume  = {7},
+  pages   = {283},
+  year    = {2020},
+  doi     = {10.1038/s41597-020-00622-y}
+}
+
+% --- HyperKvasir comparison papers (CONTEXTUAL — different protocols) -
+@article{ramamurthy2022effimix,
+  title   = {A Novel Multi-Feature Fusion Method for Classification of Gastrointestinal Diseases Using Endoscopy Images},
+  author  = {Ramamurthy, Karthik and George, Timothy Thomas and Shah, Yash and Sasidhar, Praveen},
+  journal = {Diagnostics},
+  volume  = {12},
+  number  = {10},
+  pages   = {2316},
+  year    = {2022},
+  doi     = {10.3390/diagnostics12102316}
+}
+
+@misc{gastrovit2025,
+  title        = {GastroViT: A Vision Transformer Based Ensemble Learning Approach for Gastrointestinal Disease Classification with Grad-CAM and SHAP Visualization},
+  author       = {Tabassum, Sumaiya and Ahamed, Md. Faysal and Kibria, Hafsa Binte and Nahiduzzaman, Md. and Haider, Julfikar and Chowdhury, Muhammad E. H. and Islam, Muhammad Tariqul},
+  howpublished = {arXiv preprint arXiv:2509.26502},
+  year         = {2025},
+  note         = {Preprint (arXiv). 23-class HyperKvasir; contextual only — non-official protocol.}
+}
+
+@article{ahmed2023hybrid,
+  title   = {Hybrid Models for Endoscopy Image Analysis for Early Detection of Gastrointestinal Diseases Based on Fused Features},
+  author  = {Ahmed, Ibrahim Abdulrab and Senan, Ebrahim Mohammed and Shatnawi, Hamzeh Salameh Ahmad},
+  journal = {Diagnostics},
+  volume  = {13},
+  number  = {10},
+  pages   = {1758},
+  year    = {2023},
+  doi     = {10.3390/diagnostics13101758}
+}
+
+% --- Instructor reference -------------------------------------------
+@article{bilal2025mcnnrf,
+  title   = {M-CNN-RF: A hybrid deep learning model for accurate pediatric skeletal age estimation using hand bone radiographs},
+  author  = {Bilal, Hazrat and Tian, Yi and Ullah, Inam and Garg, Sahil and Choi, Bong Jun and Hassan, Mohammad Mehedi},
+  journal = {Alexandria Engineering Journal},
+  volume  = {129},
+  pages   = {289--301},
+  year    = {2025}
+}
+
+% --- Advanced fusion (implemented) ----------------------------------
+% GMU: the implemented equations (src/models/fusion/gmu.py docstring) come from
+% the 2017 ICLR Workshop version, which is the paper.md-backed source. The 2020
+% NCAA extension has no paper.md and is therefore NOT cited.
+@inproceedings{arevalo2017gmu,
+  title     = {Gated Multimodal Units for Information Fusion},
+  author    = {Arevalo, John and Solorio, Thamar and Montes-y-G{\'o}mez, Manuel and Gonz{\'a}lez, Fabio A.},
+  booktitle = {International Conference on Learning Representations (ICLR) Workshop},
+  year      = {2017},
+  note      = {arXiv:1702.01992}
+}
+
+% --- Class imbalance (focal — imbalance-aware loss ablation) --------
+@inproceedings{lin2017focal,
+  title     = {Focal Loss for Dense Object Detection},
+  author    = {Lin, Tsung-Yi and Goyal, Priya and Girshick, Ross and He, Kaiming and Doll{\'a}r, Piotr},
+  booktitle = {Proceedings of the IEEE International Conference on Computer Vision (ICCV)},
+  pages     = {2980--2988},
+  year      = {2017}
+}
+
+% --- Training recipe -------------------------------------------------
+@inproceedings{yun2019cutmix,
+  title     = {CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features},
+  author    = {Yun, Sangdoo and Han, Dongyoon and Oh, Seong Joon and Chun, Sanghyuk and Choe, Junsuk and Yoo, Youngjoon},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  pages     = {6023--6032},
+  year      = {2019}
+}
+
+@inproceedings{cubuk2020randaugment,
+  title     = {RandAugment: Practical Automated Data Augmentation with a Reduced Search Space},
+  author    = {Cubuk, Ekin D. and Zoph, Barret and Shlens, Jonathon and Le, Quoc V.},
+  booktitle = {NeurIPS Workshops},
+  year      = {2020}
+}
+
+@inproceedings{loshchilov2019adamw,
+  title     = {Decoupled Weight Decay Regularization},
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2019},
+  note      = {arXiv:1711.05101}
+}
+
+% --- Evaluation / interpretability ----------------------------------
+@inproceedings{chattopadhyay2018gradcampp,
+  title     = {Grad-CAM++: Improved Visual Explanations for Deep Convolutional Networks},
+  author    = {Chattopadhyay, Aditya and Sarkar, Anirban and Howlader, Prantik and Balasubramanian, Vineeth N.},
+  booktitle = {IEEE Winter Conference on Applications of Computer Vision (WACV)},
+  pages     = {839--847},
+  year      = {2018}
+}
+
+@article{dietterich1998mcnemar,
+  title   = {Approximate Statistical Tests for Comparing Supervised Classification Learning Algorithms},
+  author  = {Dietterich, Thomas G.},
+  journal = {Neural Computation},
+  volume  = {10},
+  number  = {7},
+  pages   = {1895--1923},
+  year    = {1998}
+}
+
+@article{mcinnes2018umap,
+  title   = {UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction},
+  author  = {McInnes, Leland and Healy, John and Melville, James},
+  journal = {Journal of Open Source Software},
+  volume  = {3},
+  number  = {29},
+  pages   = {861},
+  year    = {2018}
+}
+
+% --- Backbone papers (foundational architectures we implement) ----------------
+% Not part of the auto-extracted survey (references/INDEX.md), so manual paper.md
+% stubs were added under references/methodology_backbones/ to satisfy the AGENTS
+% "no paper.md -> no cite" rule. Standard, widely-verified metadata.
+@inproceedings{he2016resnet,
+  title     = {Deep Residual Learning for Image Recognition},
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {770--778},
+  year      = {2016}
+}
+
+@inproceedings{sandler2018mobilenetv2,
+  title     = {MobileNetV2: Inverted Residuals and Linear Bottlenecks},
+  author    = {Sandler, Mark and Howard, Andrew and Zhu, Menglong and Zhmoginov, Andrey and Chen, Liang-Chieh},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {4510--4520},
+  year      = {2018}
+}
+
+@inproceedings{tan2019efficientnet,
+  title     = {EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks},
+  author    = {Tan, Mingxing and Le, Quoc V.},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  pages     = {6105--6114},
+  year      = {2019}
+}

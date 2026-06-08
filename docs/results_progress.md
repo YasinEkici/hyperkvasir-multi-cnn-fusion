@@ -436,6 +436,25 @@ inference recipe) in [`docs/FINAL_MODEL.md`](FINAL_MODEL.md). Week 4 builds on t
 ## Week 4 — Analysis and Report
 *Planned: ~2026-06-01 to 2026-06-04*
 
+### Track A — final figures & tables for the frozen model (2026-06-08)
+
+Generated inference-free from the frozen model's saved TTA predictions / logs
+(`scripts/analyze_frozen_model.py`; no training):
+
+| Artifact | Path | Notes |
+|---|---|---|
+| Confusion matrix (A1) | `results/figures/confusion_matrix_frozen_tta.png` | 23×23, pooled TTA, class-labelled |
+| Table 3 — per-class P/R/F1/support (A2) | `results/tables/per_class_frozen_tta.csv` / `.md` | pooled n=10,662; macro-F1 **0.6075** (matches frozen headline); rare classes (support ≤ 10) flagged |
+| Table 4 — training cost (A3) | `results/tables/training_time.csv` / `.md` | epochs-to-early-stop (exact, from final epoch_log entry) + APPROX wall-clock |
+| Per-class F1 chart (A4) | `results/figures/per_class_f1_frozen_tta.png` | from frozen pooled TTA (not single fold) |
+| Comparison bar chart (A4) | `results/figures/comparison_bar_chart.png` | refreshed over all experiments |
+
+Per-class story (Table 3): the macro-F1 ceiling is driven by rare classes — e.g.
+`ileum` (support 9) and `ulcerative-colitis-grade-1-2` (11) score F1=0.000;
+`hemorroids` (6) F1=0.250 — while common classes (impacted-stool 0.796, etc.)
+are strong. Confirms the data-scarcity ceiling, not a model defect.
+
+
 ### Planned milestones
 
 - Confusion matrix for best model

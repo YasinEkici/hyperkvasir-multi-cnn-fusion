@@ -1,0 +1,132 @@
+% =====================================================================
+% 5. TARTIŞMA (Discussion) — assignment §5.5, the most critical section (25%).
+% Answer the required questions explicitly and honestly. Only documented
+% results. No SOTA; TTA/ensemble gains are WITHIN CI — say so. macro-F1 headline.
+% Evidence base: docs/results_progress.md, docs/experiment_log.md,
+%                docs/decisions.md (D-06/D-07), docs/FINAL_MODEL.md,
+%                Section 4 tables/figures.
+% =====================================================================
+\section{Tartışma}
+\label{sec:discussion}
+
+Bu bölüm, ödevin en kritik sorularını --- hangi modelin daha iyi öğrendiği,
+füzyonun yardımcı olup olmadığı, en iyi kombinasyon, dengesizliğin etkisi ve
+transfer öğrenme yaklaşımının başarısı --- Bölüm~\ref{sec:results}'teki
+belgelenmiş sonuçlara dayanarak yanıtlar.
+
+\subsection{Hangi Omurga Ağ Daha İyi Özellik Öğrendi?}
+\label{subsec:disc-backbone}
+Frozen rejimde, yani omurga ağların yalnızca önceden eğitilmiş özellik çıkarıcı
+olarak kullanıldığı durumda, en iyi tekil omurga EfficientNetB0'dır (makro-F1
+$0{,}5586$; Tablo~\ref{tab:ablation}). Bu, EfficientNetB0'ın ImageNet üzerinde
+öğrendiği temsillerin bu endoskopi görevine, ResNet50 ve MobileNetV2'ye kıyasla
+daha doğrudan aktarılabildiğini gösterir. Ancak ``en iyi omurga'' sorusunun
+yanıtı rejime bağlıdır: fine-tune ve füzyon birlikte ele alındığında, tek bir
+omurga yerine üç omurganın \emph{ağırlıklı} füzyonu CV düzeyinde en iyi sonucu
+verir (exp 11; Tablo~\ref{tab:cv}). Yani tekil olarak en güçlü çıkarıcı
+EfficientNetB0 olsa da, tümleyici bilgiyi birleştiren çok-omurga füzyonu daha
+ayırt edici bir temsil sağlamaktadır.
+
+\subsection{Füzyon Performansı Artırdı mı?}
+\label{subsec:disc-fusion}
+Füzyonun etkisi koşula bağlıdır. Frozen rejimde
+ResNet50'nin eklenmesi M+E çiftine zarar verir (makro-F1 $0{,}5758
+\rightarrow 0{,}5630$); 2048-boyutlu frozen ResNet50 özellikleri birleştirme
+kurulumunda gürültü ekler. Buna karşılık fine-tune + CV düzeyinde füzyon belirgin
+biçimde yardımcı olur: en iyi yapılandırma üçlü ağırlıklı füzyondur. Ağırlıklı ile
+birleştirme füzyonu arasındaki fark istatistiksel olarak da anlamlıdır; exp 11'in
+güven aralığı alt sınırı ($0{,}5814$), exp 10'un üst sınırından ($0{,}5799$)
+büyüktür ve iki aralık örtüşmez (Tablo~\ref{tab:ci}). Öte yandan gelişmiş kapılı
+füzyon (GMU) birleştirmeyi geçmez; CV ortalamasındaki fark $\approx 0{,}002$ ve
+güven aralıkları tamamen örtüşür. GMU temiz bir uygulama ve geçerli bir
+alternatif olsa da, bu veri kümesi ve protokol altında birleştirmeye kıyasla ek
+bir kazanım sağlamamıştır. Ağırlıklı füzyonun avantajı, dalların
+katkısını öğrenilebilir kılmasından kaynaklanır; sabit birleştirme tüm dallara
+eşit ağırlık verirken, ağırlıklı füzyon zayıf/gürültülü dalın katkısını
+azaltabilir.
+
+\subsection{En İyi Kombinasyon ve Fold-0 Yanılgısı}
+\label{subsec:disc-best}
+En iyi kombinasyon, nihai model olan üçlü ağırlıklı fine-tune + TTA'dır
+(exp 11 + TTA; havuzlanmış makro-F1 $0{,}6075$). Burada önemli bir metodolojik
+nokta vardır: fold-0'a bakıldığında birleştirme ($0{,}5796$) ağırlıklıyı
+($0{,}5751$) geçiyor görünür (Tablo~\ref{tab:ablation}); ancak 5-katlı CV bu
+sıralamayı kesin biçimde tersine çevirir (ağırlıklı $0{,}5892$ vs.\ birleştirme
+$0{,}5691$; Tablo~\ref{tab:cv}). Tek bir foldun test sonucuna bakarak eğitim
+rejimi veya yapılandırma seçmek bir seçim yanlılığı (selection bias) oluşturur;
+bu nedenle yapılandırma seçimi yalnızca CV ortalaması üzerinden yapılmıştır.
+Fold-0, exp 13 ve exp 14 için de temsil edici olmayan bir örnektir.
+
+\subsection{Sınıf Dengesizliğinin Etkisi ve Neden Makro-F1?}
+\label{subsec:disc-imbalance}
+Dengesizliğin etkisi sayısal olarak nettir: en iyi model için doğruluk
+$\approx 0{,}87$ iken makro-F1 $\approx 0{,}60$'tır (Tablo~\ref{tab:extra}).
+Örnek-ağırlıklı F1 ($0{,}8716$) doğruluğa yakınken, makro-F1 çok daha düşüktür;
+aradaki $\approx 0{,}27$'lik fark, az sayıda kalabalık sınıfın aggregate ölçütleri
+yukarı çektiğini, nadir sınıflardaki başarısızlığın ise yalnızca makro ortalamada
+görünür olduğunu gösterir. Bu nedenle makro-F1 ana ölçüt olarak seçilmiştir:
+her sınıfa eşit ağırlık vererek dengesiz bir görevde gerçek model davranışını
+yansıtır. Doğruluk ve örnek-ağırlıklı F1 yalnızca destekleyici bağlam sağlar;
+tek başına başarı kanıtı olarak kullanılmaz. Dengesizliğe nispeten dayanıklı bir
+skor olan MCC de aynı eğilimi doğrular: en iyi CE yapılandırmasında $0{,}8599$,
+nihai modelde (exp 11 + TTA) $0{,}8662$'dir.
+
+\subsection{Hangi Sınıflar Zor ve Neden?}
+\label{subsec:disc-hard}
+En zor sınıflar, en düşük destekli olanlardır (Tablo~\ref{tab:perclass}). Destek
+$\le 10$ olan \textit{hemorroids} (6) ve \textit{ileum} (9) ile destek
+$\le \!\sim\!50$ olan ülseratif kolit ve Barrett alt sınıfları $0{,}3$'ün
+altında, çoğu zaman $0$'a yakın F1 verir. Hata matrisi (Şekil~\ref{fig:cm}) bu
+başarısızlığın rastgele olmadığını gösterir: nadir sınıflar, görsel ya da
+anlamsal olarak en yakın çoğunluk sınıfına soğurulur (ülseratif kolit dereceleri
+komşu derecelere, Barrett varyantları \textit{normal-z-line}'a karışır). Bu, saf
+bir veri kıtlığı etkisidir; model bu sınıflar için ayırt edici özellik
+öğrenecek kadar örnek görmez. Buna karşılık yüksek destekli sınıflar (ör.\
+\textit{retroflex-stomach}, \textit{bbps-2-3}, \textit{polyp}) $0{,}95$'in
+üzerinde F1 elde eder.
+
+\subsection{Transfer Öğrenme: Fine-tune mı Frozen mı, Ne Kadar Sürdü?}
+\label{subsec:disc-transfer}
+CV ortalaması ölçüt alındığında fine-tune, frozen'a göre tutarlı biçimde daha
+iyidir; uçtan uca gradyan akışı, frozen çıkarımın kaçırdığı ayırt edici
+özellikleri kurtarır. Fold-0'da tekil EfficientNetB0 ve M+E çifti için fine-tune'un
+frozen'ın altında kalması, yalnızca o folda özgü bir sapmadır; CV ortalaması bu
+sapmayı düzeltir. Maliyet açısından (Tablo~\ref{tab:time}) frozen koşular
+önbelleğe alınmış özellikler sayesinde saniyeler mertebesinde çalışırken,
+fine-tune koşuları kat başına yaklaşık 18--21 dakika sürer (RTX 5080) ve 12--16
+epoch'ta erken durur. Dolayısıyla fine-tune, ek hesaplama maliyeti karşılığında
+makro-F1'de ölçülebilir bir iyileşme sağlar; bu takas, sınırlı veride güçlü veri
+artırma ile hızlı yakınsama nedeniyle yönetilebilir düzeydedir.
+
+\subsection{Toplamsal Ablasyonların Değerlendirmesi}
+\label{subsec:disc-week35}
+En iyi yapılandırma üzerinde denenen toplamsal tekniklerin sonucu şöyledir
+(Tablo~\ref{tab:week35}): focal loss nokta tahmininde CE'nin
+altında kalmıştır ($0{,}5914$ vs.\ $0{,}6000$); TTA en iyi nokta tahminini verir
+($0{,}6075$) ancak CE'ye göre $+0{,}0075$'lik fark güven aralığı içinde kalır ve
+istatistiksel olarak anlamlı değildir; seed topluluğu makro-F1'i artırmamıştır
+($0{,}5971$). \textbf{Hiçbir teknik en iyi çapraz-entropi yapılandırmasını \%95
+güven aralığı düzeyinde geçmemiştir.} Bunun en makul yorumu, mimarinin resmi
+5-katlı protokolde
+tavanına yakın olmasıdır: kalan açık, kayıp fonksiyonu, çıkarım veya topluluk
+ayarlarıyla kapanmayan, nadir sınıflardaki veri kıtlığından kaynaklanır. TTA yine
+de final modelde benimsenmiştir; çünkü sıfır ek eğitim maliyetiyle en iyi nokta
+tahminini verir ve aggregate metrikleri hiçbir zaman düşürmez.
+
+\subsection{Güçlü Yönler, Sınırlamalar ve Gelecek Çalışma}
+\label{subsec:disc-strengths}
+Çalışmanın başlıca güçlü yönü, tüm iç karşılaştırmaların resmi 5-katlı protokol
+üzerinde, sızıntıya karşı denetlenmiş ve önyükleme güven aralıklarıyla
+desteklenmiş biçimde yürütülmesidir; bu, tekil bölme veya dengelenmiş kurulum
+kullanan birçok dış sonuca kıyasla metodolojik olarak daha tutarlı bir
+değerlendirmedir. Başlıca sınırlamalar ise: nadir sınıflardaki veri kıtlığı
+(destek $\le 10$ sınıflarda $0$'a yakın F1), farklı protokol kullanan literatürle
+doğrudan baş-başa karşılaştırma yapılamaması ve final modelin tek tohumla
+eğitilmiş olmasıdır. Gelecek çalışma olarak, nihai model üzerinde
+yorumlanabilirlik analizleri (Grad-CAM++, UMAP) ve nadir sınıfları hedefleyen
+veri-merkezli yaklaşımlar değerlendirilebilir (Bölüm~\ref{sec:conclusion}).
+Sonuç olarak, önerilen çok-CNN ağırlıklı füzyon + MLP mimarisi, resmi protokol
+altında tutarlı ve temkinli biçimde konumlandırılmış bir performans sergiler;
+ancak
+abartılı bir üstünlük ya da güncel-en-iyi (state-of-the-art) iddiası bu
+sonuçlarla desteklenmez.

@@ -1,0 +1,382 @@
+% =====================================================================
+% 4. SONUÇLAR (Results)
+% Use ONLY documented numbers (traceable to results/tables/, results/figures/,
+% docs/FINAL_MODEL.md). No invention. macro-F1 headline; accuracy supporting.
+% Sources:
+%   Table 1  -> results/tables/ablation_table.md (fold-0 rows)
+%   Table 2  -> results/tables/cv_*_summary.json
+%   Table 2b -> results/tables/ci_*.json
+%   Supporting metrics -> results/tables/extra_metrics_*.json
+%   Table 3  -> results/tables/per_class_frozen_tta.md
+%   Table 4  -> results/tables/training_time.md
+%   Week 3.5 head-to-head -> ci_11_*{,_tta,_ensemble,_ensemble_tta}.json, ci_16_*
+%   Figures  -> results/figures/{comparison_bar_chart,training_curves,
+%               confusion_matrix_frozen_tta,per_class_f1_frozen_tta}.png
+% =====================================================================
+\section{Sonuçlar}
+\label{sec:results}
+
+Sonuçlar dört eksende sunulur: (i) fold-0 üzerinde tek/ikili/üçlü ablasyon,
+(ii) seçilmiş yapılandırmalar için 5-katlı çapraz doğrulama (CV), (iii) en iyi
+yapılandırma üzerinde toplamsal ablasyonların baş-başa
+karşılaştırması ve (iv) nihai modelin sınıf-bazlı çözümlemesi. Ana ölçüt
+makro-F1, destekleyici ölçüt ise doğruluktur (accuracy).
+
+\subsection{Tek/İkili/Üçlü Ablasyon (fold-0)}
+\label{subsec:t1}
+Tablo~\ref{tab:ablation} fold-0 üzerindeki ablasyonu özetler. Frozen rejimde en
+iyi tekil omurga EfficientNetB0 (makro-F1 $0{,}5586$), en iyi yapılandırma ise
+M+E birleştirme çiftidir ($0{,}5758$); ResNet50'nin frozen üçlü birleştirmeye
+eklenmesi makro-F1'i düşürür. Fine-tune rejiminde fold-0'da en yüksek değeri
+üçlü birleştirme verir ($0{,}5796$); ancak bu sıralamanın CV ile tersine döndüğü
+Bölüm~\ref{subsec:t2}'de görülecektir. Hiçbir koşuda NaN değer veya sıfır-destekli
+sınıf oluşmamıştır.
+
+\begin{table}[H]
+\centering
+\caption{Fold-0 ablasyonu (resmi 5-katlı bölme, fold 0). Acc = doğruluk,
+M-F1 = makro-F1.}
+\label{tab:ablation}
+\begin{tabular}{llll cc}
+\toprule
+ID & Omurga(lar) & Füzyon & Rejim & Acc & M-F1 \\
+\midrule
+01 & ResNet50        & --       & frozen        & 0.8402 & 0.5588 \\
+02 & MobileNetV2     & --       & frozen        & 0.8483 & 0.5502 \\
+03 & EfficientNetB0  & --       & frozen        & 0.8591 & 0.5586 \\
+05 & R+M             & concat   & frozen        & 0.8247 & 0.5438 \\
+06 & R+E             & concat   & frozen        & 0.8388 & 0.5464 \\
+07 & M+E             & concat   & frozen        & 0.8728 & \textbf{0.5758} \\
+08 & R+M+E           & concat   & frozen        & 0.8567 & 0.5630 \\
+09 & R+M+E           & weighted & frozen        & 0.8549 & 0.5609 \\
+\midrule
+12 & ResNet50        & --       & finetune-3blk & 0.8501 & 0.5748 \\
+13 & EfficientNetB0  & --       & finetune-3blk & 0.8355 & 0.5539 \\
+14 & M+E             & concat   & finetune-3blk & 0.8384 & 0.5522 \\
+10 & R+M+E           & concat   & finetune-3blk & 0.8784 & \textbf{0.5796} \\
+11 & R+M+E           & weighted & finetune-3blk & 0.8685 & 0.5751 \\
+15 & R+M+E           & GMU      & finetune-3blk & 0.8497 & 0.5645 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Seçilmiş 5-Katlı Çapraz Doğrulama}
+\label{subsec:t2}
+Seçilmiş beş yapılandırma beş katın tamamında çalıştırılmıştır
+(Tablo~\ref{tab:cv}). En iyi CV yapılandırması üçlü ağırlıklı fine-tune'dur
+(exp 11, makro-F1 $0{,}5892 \pm 0{,}0102$). Bu, fold-0'da birleştirmenin
+($0{,}5796$) ağırlıklıyı ($0{,}5751$) geçtiği sıralamayı tersine çevirir;
+fold-0 bu iki yapılandırma için temsil edici olmayan bir örnektir. GMU, CV
+düzeyinde birleştirmeyi geçmez (fark $\approx 0{,}002$, gürültü içinde).
+
+\begin{table}[H]
+\centering
+\caption{Seçilmiş 5-katlı çapraz doğrulama, ortalama $\pm$ standart sapma.}
+\label{tab:cv}
+\begin{tabular}{ll l cc}
+\toprule
+ID & Yapılandırma & Füzyon & Acc (ort.\,$\pm$\,std) & M-F1 (ort.\,$\pm$\,std) \\
+\midrule
+13 & EfficientNetB0 & --       & $0.8484 \pm 0.0100$ & $0.5690 \pm 0.0158$ \\
+14 & M+E            & concat   & $0.8482 \pm 0.0071$ & $0.5670 \pm 0.0089$ \\
+10 & R+M+E          & concat   & $0.8580 \pm 0.0122$ & $0.5691 \pm 0.0064$ \\
+11 & R+M+E          & weighted & $\mathbf{0.8706 \pm 0.0042}$ & $\mathbf{0.5892 \pm 0.0102}$ \\
+15 & R+M+E          & GMU      & $0.8480 \pm 0.0063$ & $0.5672 \pm 0.0049$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Önyükleme (Bootstrap) \%95 Güven Aralıkları}
+\label{subsec:t2b}
+Tablo~\ref{tab:ci} havuzlanmış test kümesi ($n = 10{.}662$) üzerinde yüzdelik
+önyükleme ile hesaplanan makro-F1 nokta tahminlerini ve \%95 güven aralıklarını
+verir. Exp 11'in (ağırlıklı) alt sınırı ($0{,}5814$), exp 10'un (birleştirme)
+üst sınırından ($0{,}5799$) kesinlikle büyüktür; iki aralık örtüşmez. Dolayısıyla
+ağırlıklı füzyon, havuzlanmış kümede birleştirmeden \%95 düzeyinde istatistiksel
+olarak ayırt edilebilir. Buna karşılık GMU ve birleştirme aralıkları büyük ölçüde
+örtüşür; aralarında istatistiksel bir fark yoktur.
+
+\begin{table}[H]
+\centering
+\caption{Havuzlanmış makro-F1 ve \%95 güven aralığı ($n=10{.}662$; 1000 önyükleme,
+tohum 42).}
+\label{tab:ci}
+\begin{tabular}{ll l c c}
+\toprule
+ID & Yapılandırma & Füzyon & M-F1 (nokta) & \%95 GA \\
+\midrule
+15 & R+M+E & GMU      & 0.5690 & [0.5580,\,0.5813] \\
+10 & R+M+E & concat   & 0.5708 & [0.5618,\,0.5799] \\
+13 & EfficientNetB0 & -- & 0.5730 & [0.5596,\,0.5873] \\
+14 & M+E   & concat   & 0.5759 & [0.5608,\,0.5927] \\
+11 & R+M+E & weighted & \textbf{0.6000} & \textbf{[0.5814,\,0.6206]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Destekleyici Metrikler}
+\label{subsec:support-metrics}
+Tablo~\ref{tab:extra} havuzlanmış doğruluk/mikro-F1, örnek-ağırlıklı F1, Matthews
+korelasyon katsayısı (MCC) ve Cohen Kappa değerlerini verir. Exp 11 her
+destekleyici ölçütte de en iyidir. Makro-F1 ($\approx 0{,}60$) ile örnek-ağırlıklı
+F1 ($\approx 0{,}87$) arasındaki yaklaşık $0{,}27$'lik fark, sınıf dengesizliğinin
+doğrudan kanıtıdır: aggregate ölçütler nadir sınıflardaki başarısızlığı maskeler.
+Nihai model (exp 11 + TTA) için bu değerler biraz daha yüksektir: Kappa
+$0{,}8661$ ve makro tek-vs-rest ROC-AUC $0{,}967$ (bu iki ölçüt literatürle
+karşılaştırmada Bölüm~\ref{subsec:contextual}'da kullanılır).
+
+\begin{table}[H]
+\centering
+\caption{Havuzlanmış destekleyici metrikler ($n=10{.}662$). micro-F1 tek etiketli
+çok sınıflı durumda doğruluğa eşittir.}
+\label{tab:extra}
+\begin{tabular}{ll ccccc}
+\toprule
+ID & Yapılandırma & Acc / micro-F1 & Makro-F1 & Weighted-F1 & MCC & Kappa \\
+\midrule
+11 & R+M+E weighted & \textbf{0.8706} & \textbf{0.6000} & \textbf{0.8716} & \textbf{0.8599} & \textbf{0.8597} \\
+10 & R+M+E concat   & 0.8579 & 0.5708 & 0.8613 & 0.8464 & 0.8461 \\
+14 & M+E concat     & 0.8482 & 0.5759 & 0.8522 & 0.8359 & 0.8356 \\
+13 & EfficientNetB0 & 0.8484 & 0.5730 & 0.8536 & 0.8367 & 0.8360 \\
+15 & R+M+E GMU      & 0.8481 & 0.5690 & 0.8507 & 0.8358 & 0.8355 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Toplamsal Ablasyonlar (Baş-Başa Karşılaştırma)}
+\label{subsec:week35}
+En iyi yapılandırma (exp 11) üzerinde dört toplamsal teknik
+değerlendirilmiştir: focal loss, TTA, sızıntısız seed topluluğu ve
+topluluk+TTA. Tablo~\ref{tab:week35} havuzlanmış makro-F1 ile \%95 güven
+aralıklarını verir. \textbf{Hiçbir teknik, en iyi çapraz-entropi yapılandırmasını
+(exp 11 base, $0{,}6000$) \%95 güven aralığı düzeyinde geçememiştir}: tüm
+aralıklar bu yapılandırmanın aralığıyla örtüşür. Focal loss nokta tahmini
+olarak CE'nin altında kalmıştır ($0{,}5914$). TTA en iyi nokta tahminini verir
+($0{,}6075$), ancak CE'ye göre $+0{,}0075$'lik fark aralık örtüşmesi içindedir;
+yani istatistiksel olarak anlamlı bir kazanım değildir. Seed topluluğu makro-F1'i
+artırmamıştır ($0{,}5971$; ek seed bir kazanım getirmemiştir), yalnızca
+destekleyici metriklerde (acc/weighted-F1/MCC) küçük bir iyileşme ve daha dar bir
+aralık sağlamıştır. Bu nedenle nihai model, sıfır ek
+eğitim maliyetiyle en iyi nokta tahminini veren ve aggregate değerleri hiçbir
+zaman düşürmeyen \textbf{exp 11 + TTA} olarak seçilmiştir.
+
+\begin{table}[H]
+\centering
+\caption{En iyi yapılandırma (exp 11) üzerinde toplamsal ablasyonlar, havuzlanmış
+makro-F1 ($n=10{.}662$). Tüm aralıklar en iyi CE yapılandırmasının aralığıyla
+örtüşür.}
+\label{tab:week35}
+\begin{tabular}{l c c}
+\toprule
+Varyant & Makro-F1 (nokta) & \%95 GA \\
+\midrule
+exp 11 base (en iyi CE yap.)   & 0.6000 & [0.5814,\,0.6206] \\
+exp 16 focal ($\gamma{=}2$)    & 0.5914 & [0.5750,\,0.6096] \\
+exp 11 + seed topluluğu        & 0.5971 & [0.5850,\,0.6097] \\
+exp 11 + topluluk + TTA        & 0.6005 & [0.5883,\,0.6135] \\
+\textbf{exp 11 + TTA (final)}  & \textbf{0.6075} & \textbf{[0.5860,\,0.6296]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Nihai Modelin Sınıf-Bazlı Çözümlemesi}
+\label{subsec:t3}
+Tablo~\ref{tab:perclass} nihai model (exp 11 + TTA) için havuzlanmış
+sınıf-bazlı kesinlik/duyarlılık/F1 ve destek değerlerini verir. Yüksek destekli
+sınıflar (ör.\ \textit{retroflex-stomach}, \textit{bbps-2-3},
+\textit{normal-pylorus}) $0{,}95$'in üzerinde F1 elde ederken, çok düşük
+destekli nadir sınıflar çöker: destek $\le 10$ olan \textit{hemorroids} (6) ve
+\textit{ileum} (9) ile destek $\le \!\sim\!50$ olan ülseratif kolit ve Barrett
+alt sınıfları $0{,}3$'ün altında, çoğu zaman $0$'a yakın F1 verir. Bu, makro-F1
+ile aggregate doğruluk arasındaki farkın kaynağıdır.
+
+\begin{table}[H]
+\centering
+\caption{Sınıf-bazlı metrikler --- nihai model (exp 11 üçlü ağırlıklı CE + TTA),
+havuzlanmış 5-katlı test, $n=10{.}662$. R = nadir (destek $\le 10$). Makro:
+P=0.6162, R=0.6158, \textbf{F1=0.6075}.}
+\label{tab:perclass}
+\small
+\begin{tabular}{l rrr r c}
+\toprule
+Sınıf & Kesinlik & Duyarlılık & F1 & Destek & R \\
+\midrule
+hemorroids                   & 0.500 & 0.167 & 0.250 & 6    & $\bullet$ \\
+ileum                        & 0.000 & 0.000 & 0.000 & 9    & $\bullet$ \\
+ulcerative-colitis-grade-1-2 & 0.000 & 0.000 & 0.000 & 11   &  \\
+ulcerative-colitis-grade-2-3 & 0.071 & 0.107 & 0.086 & 28   &  \\
+ulcerative-colitis-grade-0-1 & 0.368 & 0.200 & 0.259 & 35   &  \\
+barretts                     & 0.116 & 0.195 & 0.145 & 41   &  \\
+short-segment-barretts       & 0.086 & 0.170 & 0.115 & 53   &  \\
+impacted-stool               & 0.668 & 0.985 & 0.796 & 131  &  \\
+ulcerative-colitis-grade-3   & 0.563 & 0.669 & 0.612 & 133  &  \\
+ulcerative-colitis-grade-1   & 0.519 & 0.483 & 0.500 & 201  &  \\
+oesophagitis-b-d             & 0.651 & 0.769 & 0.706 & 260  &  \\
+retroflex-rectum             & 0.916 & 0.982 & 0.948 & 391  &  \\
+oesophagitis-a               & 0.521 & 0.365 & 0.429 & 403  &  \\
+ulcerative-colitis-grade-2   & 0.690 & 0.603 & 0.643 & 443  &  \\
+bbps-0-1                     & 0.980 & 0.968 & 0.974 & 646  &  \\
+retroflex-stomach            & 0.992 & 0.988 & 0.990 & 764  &  \\
+normal-z-line                & 0.836 & 0.825 & 0.831 & 932  &  \\
+dyed-resection-margins       & 0.912 & 0.913 & 0.913 & 989  &  \\
+normal-pylorus               & 0.967 & 0.997 & 0.982 & 999  &  \\
+dyed-lifted-polyps           & 0.914 & 0.913 & 0.914 & 1002 &  \\
+normal-cecum                 & 0.932 & 0.988 & 0.959 & 1009 &  \\
+polyp                        & 0.977 & 0.936 & 0.956 & 1028 &  \\
+bbps-2-3                     & 0.992 & 0.943 & 0.967 & 1148 &  \\
+\midrule
+\textbf{makro ort.}          & \textbf{0.6162} & \textbf{0.6158} & \textbf{0.6075} & 10662 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Eğitim Maliyeti}
+\label{subsec:t4}
+Tablo~\ref{tab:time} erken-durma epoch sayısını ve yaklaşık duvar-saati süresini
+verir. Frozen koşular önbelleğe alınmış özellikler üzerinde saniyeler
+mertebesinde çalışırken, fine-tune koşuları kat başına yaklaşık 18--21 dakika
+sürer (RTX 5080). Tüm fine-tune koşuları 12--16 epoch'ta erken durmuştur; bu,
+küçük veri kümesi ve güçlü veri artırma ile tutarlıdır. Duvar-saati değerleri
+yaklaşıktır; epoch günlükleri zaman damgası içermediğinden gözlemlenen
+$\approx 1{,}5$ dk/epoch hızından türetilmiştir.
+
+\begin{table}[H]
+\centering
+\caption{Eğitim maliyeti (fold-0 erken-durma epoch'u + yaklaşık duvar-saati).}
+\label{tab:time}
+\begin{tabular}{ll l r l}
+\toprule
+ID & Yapılandırma & Rejim & Epoch & Yaklaşık süre \\
+\midrule
+03 & EfficientNetB0 & frozen        & 16 & hızlı (önbellek; $\sim$sn/epoch) \\
+07 & M+E concat     & frozen        & 21 & hızlı (önbellek; $\sim$sn/epoch) \\
+09 & R+M+E weighted & frozen        & 12 & hızlı (önbellek; $\sim$sn/epoch) \\
+13 & EfficientNetB0 & finetune-3blk & 13 & $\sim$20 dk/fold (yaklaşık) \\
+14 & M+E concat     & finetune-3blk & 13 & $\sim$20 dk/fold (yaklaşık) \\
+10 & R+M+E concat   & finetune-3blk & 14 & $\sim$21 dk/fold (yaklaşık) \\
+11 & R+M+E weighted & finetune-3blk & 12 & $\sim$18 dk/fold (yaklaşık) \\
+15 & R+M+E GMU      & finetune-3blk & 14 & $\sim$21 dk/fold (yaklaşık) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Şekiller}
+\label{subsec:figures}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{comparison_bar_chart.pdf}
+\caption{Seçilmiş beş 5-katlı yapılandırma için havuzlanmış ($n{=}10{.}662$)
+doğruluk ve makro-F1 karşılaştırması.}
+\label{fig:bar}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{training_curves.pdf}
+\caption{Doğrulama doğruluğu ve makro-F1'in epoch boyunca değişimi (seçilmiş beş
+5-katlı yapılandırma, fold 0).}
+\label{fig:curves}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{confusion_matrix_frozen_tta.pdf}
+\caption{Nihai model (exp 11 + TTA) için $23\times23$ satır-normalize hata
+matrisi, havuzlanmış 5-katlı test ($n{=}10{.}662$). Eksenler sınıf indeksleridir:
+{\footnotesize 0=barretts, 1=bbps-0-1, 2=bbps-2-3, 3=dyed-lifted-polyps,
+4=dyed-resection-margins, 5=hemorroids, 6=ileum, 7=impacted-stool, 8=normal-cecum,
+9=normal-pylorus, 10=normal-z-line, 11=oesophagitis-a, 12=oesophagitis-b-d,
+13=polyp, 14=retroflex-rectum, 15=retroflex-stomach, 16=short-segment-barretts,
+17=ulcerative-colitis-grade-0-1, 18=ulcerative-colitis-grade-1,
+19=ulcerative-colitis-grade-1-2, 20=ulcerative-colitis-grade-2,
+21=ulcerative-colitis-grade-2-3, 22=ulcerative-colitis-grade-3.}}
+\label{fig:cm}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{per_class_f1_frozen_tta.pdf}
+\caption{Nihai model için sınıf-bazlı F1 (azalan sırada; kırmızı sütunlar:
+F1 < 0.3; kırmızı kesikli çizgi: F1 = 0.3 eşiği). Nadir sınıflardaki çöküş açıkça
+görülür.}
+\label{fig:perclassf1}
+\end{figure}
+
+\subsection{Literatür ile Karşılaştırma}
+\label{subsec:contextual}
+Karşılaştırmayı iki düzeyde sunuyoruz: (i) bizimle \emph{aynı resmi-bölme
+protokolünü} kullanan ve dolayısıyla yakın-doğrudan kıyaslanabilen Borgli ve
+ark.\ baseline'ları; (ii) farklı protokol kullanan ve yalnızca \emph{bağlamsal}
+olarak anılabilen diğer çalışmalar. Hiçbir durumda doğrudan üstünlük ya da
+güncel-en-iyi (SOTA) iddiasında bulunulmamaktadır.
+
+\paragraph{Aynı protokol (resmi bölme).}
+Tablo~\ref{tab:cmp-borgli}, aynı resmi-bölme ailesinde raporlanan Borgli ve
+ark.~\cite{borgli2020hyperkvasir} baseline'larıyla nihai modelimizi
+karşılaştırır. Çok daha \emph{hafif} üçlü füzyonumuz (ResNet50+MobileNetV2+
+EfficientNetB0, $\approx$14M omurga parametresi), Borgli'nin \emph{ağır}
+ResNet-152+DenseNet-161+MLP füzyonuyla makro-F1'de \textbf{başa baştır}
+($0{,}6075$ vs $0{,}605$) ve en iyi tekil omurgaları DenseNet-161'e ($0{,}619$)
+yaklaşır; ancak genel doğruluk/mikro-F1 ($0{,}877$ vs $\approx 0{,}907$) ve MCC
+($0{,}866$ vs $\approx 0{,}90$) açısından yaklaşık 3--4 puan geridedir. Yani
+dengesizliğe duyarlı makro-F1'de ağır modellerle eşitleniyoruz; genel doğrulukta
+ise --- daha düşük omurga kapasitesiyle tutarlı biçimde --- onların altında
+kalıyoruz. (Borgli iki resmi split ortalaması verir, biz resmi 5-kat kullanırız;
+ikisi de resmi-bölme tabanlı, küçük bir fark.)
+
+\begin{table}[H]
+\centering
+\caption{Aynı resmi-bölme protokolünde karşılaştırma. Borgli değerleri
+\cite{borgli2020hyperkvasir} Tablo 3 (iki split ortalaması); bizim değerlerimiz
+resmi 5-kat havuzlanmıştır ($n=10{.}662$).}
+\label{tab:cmp-borgli}
+\begin{tabular}{ll ccc}
+\toprule
+Yöntem & Omurga(lar) & Makro-F1 & micro-F1/Acc & MCC \\
+\midrule
+Borgli & ResNet-50 & 0.530 & 0.839 & 0.826 \\
+Borgli & ResNet-152 & 0.606 & 0.906 & 0.898 \\
+Borgli & DenseNet-161 & 0.619 & 0.907 & 0.899 \\
+Borgli & RN152+DN161+MLP & 0.605 & 0.909 & 0.902 \\
+\textbf{Bizim} & \textbf{R+M+E + TTA} & \textbf{0.6075} & 0.8765 & 0.8662 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Bağlamsal (farklı protokol --- baş-başa değil).}
+Tablo~\ref{tab:cmp-context} farklı bölme/ön işleme kullanan çalışmaları listeler;
+protokol farkı nedeniyle baş-başa kıyaslanamazlar. Effimix~\cite{ramamurthy2022effimix}
+$\approx \%98$ doğruluk ($0{,}97$ makro-F1) bildirir; ancak bu sonuç veriyi
+$\sim$23.000'e augment edip sınıfları dengeleyen ve resmi-olmayan bir bölme
+kullanan bir kuruluma dayanır (iyimser yanlılık). GastroViT~\cite{gastrovit2025}
+23-sınıf için $0{,}92$ doğruluk / $0{,}64$ makro-F1 (tek split) verir; 16-sınıflı
+sonuçları farklı bir görev olduğundan bizim 23-sınıflı sonuçlarımızla
+\emph{karıştırılmaz}. Dürüst, resmi-protokol bandında 23-sınıf makro-F1
+$\approx 0{,}53$--$0{,}62$ aralığındadır ve bizim $0{,}61$ değerimiz bu banttadır.
+
+\begin{table}[H]
+\centering
+\caption{Bağlamsal karşılaştırma (farklı protokol --- baş-başa DEĞİL).
+``Effimix T5'' = ilgili değerler Effimix'in karşılaştırma tablosundan (Tablo 5)
+aktarılmıştır.}
+\label{tab:cmp-context}
+\begin{tabular}{lll cc}
+\toprule
+Çalışma & Yöntem & Protokol & Makro-F1 & Acc \\
+\midrule
+Effimix~\cite{ramamurthy2022effimix} & EffNetB0+Effimix & augment+dengeleme, resmi-olmayan & 0.97 & 0.98 \\
+GastroViT~\cite{gastrovit2025} & MobileViT topluluğu & 64:16:20 tek split & 0.64 & 0.92 \\
+He ve ark.\ (Effimix T5) & ResNet-152+MobileNetV3 & belirsiz & 0.66 & -- \\
+Galdran (CNN--BiT, Effimix T5) & BiT & belirsiz & 0.92 & -- \\
+Galdran (MNV2+ResNeXt, Effimix T5) & MNV2+ResNeXt & belirsiz & 0.64 & 0.65 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{AUC nüansı.}
+Eşik-bağımsız makro tek-vs-rest ROC-AUC değerimiz ($0{,}967$), Effimix'in
+bildirdiği AUC'ye ($0{,}977$) yakındır; oysa makro-F1'imiz ($0{,}61$) onunkinin
+($0{,}97$) çok altındadır. Bu, büyük F1 farkının sıralama kalitesinden değil,
+çalışma noktası / sınıf dengesi / protokol farkından kaynaklandığını gösterir
+(bu AUC kıyası da çapraz-protokoldür ve yalnızca açıklayıcıdır).

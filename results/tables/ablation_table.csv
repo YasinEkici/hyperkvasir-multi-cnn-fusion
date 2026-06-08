@@ -18,6 +18,11 @@ experiment_id,backbone_names,fusion_type,mode,fold,accuracy,macro_f1,macro_preci
 11_triple_weighted_finetune_wide_official_fold_2,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,2,0.8746465598491989,0.5829191035386393,0.5907455426803303,0.5928937800503625,14
 11_triple_weighted_finetune_wide_official_fold_3,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,3,0.8737040527803959,0.585954340426839,0.5863143000933634,0.5996622909517988,14
 11_triple_weighted_finetune_wide_official_fold_4,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,4,0.8725850965961361,0.6004733745584614,0.610869462001672,0.6111477163565577,14
+11_triple_weighted_finetune_wide_official_seed123,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,0,0.8529688972667295,0.5779259254033584,0.5857936725940333,0.5923074354280421,12
+11_triple_weighted_finetune_wide_official_seed123_fold_1,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,1,0.8609802073515551,0.5720016852904436,0.5706435653133497,0.6014150856895338,15
+11_triple_weighted_finetune_wide_official_seed123_fold_2,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,2,0.8746465598491989,0.5749189346438496,0.5923156404402813,0.588508766938816,15
+11_triple_weighted_finetune_wide_official_seed123_fold_3,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,3,0.8642789820923656,0.5851873781252498,0.5836703096059904,0.5990049290632242,14
+11_triple_weighted_finetune_wide_official_seed123_fold_4,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,4,0.8675252989880404,0.579288417054071,0.5978346661058529,0.5827324625570464,14
 12_single_resnet50_finetune_wide_official,resnet50,none,finetune-3blk,0,0.8501413760603205,0.5748260887032203,0.5690219930692308,0.5995350737407553,12
 13_single_efficientnetb0_finetune_wide_official,efficientnetb0,none,finetune-3blk,0,0.8355325164938737,0.553864025010381,0.5691178222725973,0.5715809977872601,13
 13_single_efficientnetb0_finetune_wide_official_fold_1,efficientnetb0,none,finetune-3blk,1,0.8605089538171536,0.5980681038636605,0.5849068254192682,0.6511601682682082,15

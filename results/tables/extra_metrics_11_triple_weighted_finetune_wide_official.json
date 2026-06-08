@@ -8,6 +8,8 @@
   "weighted_recall": 0.8705683736634777,
   "weighted_f1": 0.8716176439854112,
   "mcc": 0.8598784411011325,
+  "cohen_kappa": 0.8597187281155529,
+  "auc_macro_ovr": null,
   "experiment": "11_triple_weighted_finetune_wide_official",
   "folds_used": [
     0,
@@ -16,5 +18,6 @@
     3,
     4
   ],
-  "n_samples": 10662
+  "n_samples": 10662,
+  "predictions_file": "predictions.npz"
 }

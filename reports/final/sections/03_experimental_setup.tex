@@ -1,0 +1,90 @@
+% =====================================================================
+% 3. DENEYSEL KURULUM (Experimental Setup)
+% Evidence base: configs/dataset/hyperkvasir_23class_official.yaml,
+%                configs/training/finetune_wide.yaml, docs/decisions.md
+%                (2026-05-23 split protocol, D-09 provenance), docs/environment.md,
+%                docs/results_progress.md, src/evaluation/{metrics,statistical}.py.
+% Only documented values. No fabricated hardware/runtime.
+% =====================================================================
+\section{Deneysel Kurulum}
+\label{sec:setup}
+
+\subsection{Veri Kümesi}
+\label{subsec:dataset}
+Deneyler HiperKvasir etiketli alt kümesi üzerinde yürütülür: 23 sınıf, toplam
+10.662 JPEG görüntü, CC BY 4.0 lisansı~\cite{borgli2020hyperkvasir}. Sınıf
+dağılımı dengesizdir ve bu durum değerlendirme metriklerinin seçimini doğrudan
+etkilemektedir (bkz. Bölüm~\ref{subsec:metrics}). Tüm görüntüler ön işleme
+aşamasında kısa kenarı 256'ya ölçeklenip $224\times224$ boyutuna kırpılır ve
+ImageNet ortalama/standart sapma değerleriyle normalize edilir.
+
+\subsection{Değerlendirme Protokolü}
+\label{subsec:protocol}
+Birincil değerlendirme protokolü resmi HiperKvasir 5-katlı (5-fold) bölmesidir
+(karar tarihi 2026-05-23). Manifestler resmi katlardan deterministik olarak
+türetilir: $k$ katı için resmi kat $k$ test, kat $(k+1)\bmod 5$ doğrulama
+(validation) ve kalan katlar eğitim olarak kullanılır. Bölme manifestleri
+kaydedilir ve eğitim/doğrulama/test bölümleri arasında veri sızıntısına karşı
+denetlenir. Bu protokol, yapılandırmalar arasındaki tüm iç
+karşılaştırmaların aynı bölme mantığı üzerinde yapılmasını sağlar.
+
+\subsection{Metrikler}
+\label{subsec:metrics}
+Ana başarı ölçütü makro-F1'dir. Buna ek olarak doğruluk (accuracy),
+makro kesinlik (macro precision) ve makro duyarlılık (macro recall) destekleyici
+ölçütler olarak raporlanır. Sınıf dengesizliğinin etkisini görünür kılmak için
+mikro-F1 (tek etiketli çok sınıflı durumda doğruluğa eşittir), örnek-ağırlıklı
+(weighted) F1 ve Matthews korelasyon katsayısı (MCC) de ek ölçütler olarak
+hesaplanmıştır. Makro-F1'in öne çıkarılmasının nedeni, her sınıfa eşit ağırlık
+vererek nadir sınıflardaki başarısızlığı görünür kılması ve bu sayede dengesiz
+bir veri kümesinde aggregate doğruluğun yaratabileceği iyimser yanılgıyı
+önlemesidir; makro-F1 ile örnek-ağırlıklı F1 arasındaki belirgin fark, bu
+dengesizliğin doğrudan kanıtıdır. Tüm metrikler sıfır-bölme durumlarına karşı
+güvenli biçimde hesaplanır.
+
+Sınıf düzeyindeki davranışı incelemek için en iyi model için sınıf başına
+kesinlik/duyarlılık/F1 ve destek (support) değerleri (Tablo~\ref{tab:perclass})
+ile bir hata
+matrisi (confusion matrix) sunulur; sayısal değerler ve referanslar
+Bölüm~\ref{sec:results}'te verilir.
+Değerlendirmenin güvenilirliğini güçlendirmek için seçilmiş yapılandırmalarda
+5-kat ortalaması $\pm$ standart sapma raporlanır; ayrıca \%95 güven aralıkları
+önyükleme (bootstrap) ile hesaplanır. Güven aralığı yöntemi yüzdelik
+(percentile) tabanlıdır: 5 katın görüntü-başı tahminleri havuzlanır
+($n = 10{.}662$, her örnek tam bir kez) ve bu havuz üzerinde $1000$ önyükleme
+örneklemesi (sabit tohum 42) ile hesaplanır. Sayısal değerler
+Bölüm~\ref{sec:results}'te verilir.
+
+\subsection{Hiperparametreler}
+\label{subsec:hyperparams}
+İnce ayar deneyleri ortak bir ince-ayar yapılandırması kullanır.
+Eniyileyici AdamW'dir~\cite{loshchilov2019adamw} (başlık öğrenme oranı
+$1\times10^{-3}$, omurga öğrenme oranı $1\times10^{-4}$, ağırlık sönümü
+$1\times10^{-4}$); fine-tuning sırasında katman bazlı azalan öğrenme oranı
+(LLRD, sönüm katsayısı 0,75) uygulanır. Öğrenme oranı programı, 5 epoch ısınmalı
+(warmup) kosinüs tavlamasıdır. Kayıp fonksiyonu, 0,1 etiket yumuşatmalı (label
+smoothing) çapraz entropidir. Veri artırma olarak RandAugment ($N{=}2$, $M{=}9$),
+CutMix~\cite{yun2019cutmix} ($\alpha{=}1{,}0$, olasılık 0,5) ve yatay çevirme
+kullanılır. Ağırlıkların üstel hareketli ortalaması (EMA, sönüm 0,999, 5.\
+epoch'tan itibaren) tutulur. Eğitim en fazla 60 epoch sürer; doğrulama
+makro-F1'i üzerinde 8 epoch sabırlı erken durdurma uygulanır ve toplu iş boyutu
+(batch size) 64'tür. Sınıf dengesizliği eğitimde ağırlıklı örnekleme ile ele
+alınır. Frozen deneyler aynı temel kurulumu kullanır; ancak omurga ağ blokları
+çözülmez ve önbelleğe alınmış özellikler üzerinde yalnızca başlık eğitilir.
+
+Focal loss ablasyonu (Bölüm~\ref{subsec:focal}) temel yapılandırmadan yalnızca
+kayıp bloğunda ayrılır (etiket yumuşatmalı CE yerine $\gamma{=}2{,}0$ focal;
+etiket yumuşatma kaldırılmıştır). Nihai modelin değerlendirilmesinde,
+Bölüm~\ref{subsec:tta}'da tanımlanan dört-görünümlü deterministik TTA çıkarımı
+kullanılır.
+
+\subsection{Yeniden Üretilebilirlik ve Ortam}
+\label{subsec:repro}
+Belirlenebilirlik (determinism) için raporlanan koşularda sabit tohum (seed 42)
+ve deterministik mod kullanılmıştır. Yerel ortam şudur: Python 3.11.9, PyTorch
+2.12.0+cu132, torchvision 0.27.0+cu132 ve NVIDIA GeForce RTX 5080 dizüstü GPU'su.
+Raporlanan 5-katlı çapraz doğrulama ve nihai model bu yerel ortamda üretilmiştir;
+daha hızlı keşif için isteğe bağlı bir Colab A100 yolu da aynı bilimsel ayarlarla
+kullanılabilmektedir. Tüm koşular için yapılandırma, metrik çıktıları ve epoch
+günlükleri proje dosyaları içinde saklanır; böylece rapordaki her sayı
+izlenebilir.

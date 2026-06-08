@@ -1,0 +1,81 @@
+% =====================================================================
+% 1. GİRİŞ (Introduction)
+% Evidence base: project_plan.md §1, project_structure.md §2.4 (verified facts),
+%                docs/school_assignment.md, docs/decisions.md,
+%                docs/report/report_comparison_framework.md, references/INDEX.md.
+% Rules: no results, no SOTA, macro-F1 headline, accuracy supporting only.
+% =====================================================================
+\section{Giriş}
+\label{sec:introduction}
+
+Bu projede ele alınan problem, gastrointestinal endoskopi görüntülerinin
+HiperKvasir veri kümesindeki 23 sınıf üzerinde otomatik olarak
+sınıflandırılmasıdır~\cite{borgli2020hyperkvasir}. Görevin temel zorluğu yalnızca
+yüksek genel doğruluk elde etmek değil, sınıflar arasında oldukça dengesiz bir
+dağılımın bulunduğu bir ortamda model davranışını anlamlı biçimde
+değerlendirebilmektir. Bu nedenle çalışmada başarı ölçütü olarak tek başına
+doğruluk (accuracy) değil, sınıf başına performansa duyarlı makro-F1 öne
+çıkarılmıştır.
+
+% --- Veri kümesinin zorluğu / dengesizlik ---
+HiperKvasir etiketli alt kümesi 23 sınıf ve toplam 10.662 görüntü
+içerir~\cite{borgli2020hyperkvasir}. Sınıf dağılımı ciddi biçimde dengesizdir:
+en kalabalık sınıf (\textit{polyp}) yaklaşık 1028 örnek içerirken, en nadir
+sınıf (\textit{hemorroids}) yalnızca 6 örnekle temsil edilmektedir.
+Bu tür bir dağılımda, çoğunluk sınıflarında elde edilen yüksek doğruluk, nadir
+sınıflardaki başarısızlığı gizleyebilir. Aggregate metrikler bu nedenle
+yanıltıcı olabilir ve sınıf dengesizliğini açıkça dikkate alan bir değerlendirme
+gerektirir.
+
+% --- Çoklu CNN füzyonu motivasyonu ---
+Farklı CNN mimarileri, aynı görüntüden farklı tümleyici temsiller öğrenme
+eğilimindedir. Bu çalışmada üç önceden eğitilmiş omurga ağ --- ResNet50,
+MobileNetV2 ve EfficientNetB0 --- özellik çıkarıcı olarak kullanılmış ve bu
+ağlardan elde edilen özellik vektörleri birleştirilerek (özellik füzyonu) tek
+bir temsil oluşturulmuştur. Buradaki temel soru, birden fazla omurga ağın
+özelliklerini birleştirmenin tek bir omurga ağa kıyasla daha ayırt edici bir
+temsil sağlayıp sağlamadığıdır. Gastrointestinal endoskopide çoklu-CNN özellik
+füzyonu daha önce de incelenmiştir~\cite{ramamurthy2022effimix, ahmed2023hybrid};
+ancak bu çalışmalar farklı protokoller kullandığından (Bölüm~\ref{sec:results})
+yalnızca bağlamsal birer öncül olarak anılır, doğrudan karşılaştırma yapılmaz.
+
+% --- Kontrollü karşılaştırma eksenleri ---
+Çalışma, tek bir modelin performansını raporlamak yerine kontrollü
+karşılaştırmalar üzerine kuruludur. Üç eksende karşılaştırma yapılır:
+\begin{itemize}
+  \item \textbf{Omurga ağ karşılaştırması:} ResNet50, MobileNetV2 ve
+        EfficientNetB0'ın tek başına özellik çıkarıcı olarak performansı.
+  \item \textbf{Füzyon karşılaştırması:} tek / ikili / üçlü omurga
+        birleşimleri ile zorunlu iki füzyon yöntemi olan birleştirme
+        (concatenation) ve ağırlıklı füzyonun (weighted fusion)
+        karşılaştırılması; ek olarak gelişmiş bir kapılı füzyon (GMU) varyantı.
+  \item \textbf{Transfer öğrenme karşılaştırması:} özelliklerin sabit tutulduğu
+        (frozen) çıkarım ile son katman bloklarının ince ayarlandığı
+        (fine-tuning) yaklaşımın karşılaştırılması.
+\end{itemize}
+Sınıflandırıcı tüm bu karşılaştırmalarda sabittir ve yalnızca bir çok katmanlı
+algılayıcı (MLP) olarak seçilmiştir; bu nedenle sınıflandırıcı bazlı bir
+karşılaştırma yapılmamış, karşılaştırmalar yalnızca yukarıdaki üç eksende
+yürütülmüştür.
+
+Bu üç temel eksene ek olarak, en iyi yapılandırmanın üzerinde toplamsal
+(additive) ablasyonlar da değerlendirilmiştir: sınıf dengesizliğine duyarlı
+focal loss, test zamanı veri artırma (TTA) ve sızıntısız seed topluluğu. Bu
+ablasyonların hiçbiri, \%95 güven aralığı düzeyinde çapraz-doğrulamadaki en iyi
+çapraz-entropi yapılandırmasını (üçlü ağırlıklı fine-tune) istatistiksel olarak
+geçememiştir; nihai model olarak bu yapılandırmanın TTA'lı sürümü seçilmiştir.
+Sayısal sonuçlar ve değerlendirme Bölüm~\ref{sec:results} ve
+Bölüm~\ref{sec:discussion}'de verilir.
+
+% --- Metrik tercihi ve protokol ---
+Değerlendirmede ana ölçüt olarak makro-F1 kullanılmış, doğruluk ise yalnızca
+destekleyici bir ölçüt olarak raporlanmıştır. Makro-F1, her sınıfa eşit ağırlık
+vererek nadir sınıflardaki başarısızlığı görünür kıldığı için dengesiz çok
+sınıflı bir görevde daha bilgilendiricidir. Tüm karşılaştırmalar, sızıntıya
+karşı denetlenmiş resmi HiperKvasir 5-katlı (5-fold) protokolü altında
+yürütülmüş; böylece yapılandırmalar arasındaki karşılaştırmalar aynı bölme
+mantığı üzerinde, metodolojik olarak tutarlı biçimde yapılmıştır.
+
+% NOTE: Bu bölümün son paragrafı (projenin ana katkısına dair öğrencinin kendi
+%       cümleleri) AGENT_REPORT_RULES.md §9 gereği öğrenci tarafından elle
+%       gözden geçirilecektir.

@@ -8,6 +8,8 @@
   "weighted_recall": 0.8764772087788407,
   "weighted_f1": 0.8761300143393901,
   "mcc": 0.86623773603382,
+  "cohen_kappa": 0.8660749614713534,
+  "auc_macro_ovr": 0.9670227164804899,
   "experiment": "11_triple_weighted_finetune_wide_official",
   "folds_used": [
     0,

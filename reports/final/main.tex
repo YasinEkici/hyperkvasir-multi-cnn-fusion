@@ -1,0 +1,98 @@
+% =====================================================================
+% Multi-CNN Feature Fusion for HyperKvasir 23-class Classification
+% Final report — complete draft (Overleaf / pdfLaTeX compatible).
+% Report language: Turkish (mandated by docs/report/AGENT_REPORT_RULES.md).
+%
+% Remaining \TODO: student names/numbers (title) and the architecture diagram.
+% RULES (see notes/report_notes.md):
+%   - Every number traces to results/ or docs/FINAL_MODEL.md; no invention.
+%   - macro-F1 is the headline metric; accuracy is supporting only.
+%   - Literature comparisons that use a different protocol are CONTEXTUAL only.
+%   - No state-of-the-art claims.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% --- Encoding & language (required for a Turkish report) ---------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[turkish]{babel}
+
+% --- Allowed common packages ------------------------------------------
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}   % \mathbb for fusion equations (Sec. Method)
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}       % before hyperref (avoids option clash)
+\usepackage{hyperref}   % keep last
+
+\graphicspath{{figures/}}
+
+% --- Simple TODO helper (visible in PDF, easy to grep) -----------------
+\newcommand{\TODO}[1]{\textbf{\textcolor{red}{[TODO: #1]}}}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue
+}
+
+% =====================================================================
+\title{Çoklu CNN Tabanlı Özellik Füzyonu ile HiperKvasir\\
+       23-Sınıf Gastrointestinal Görüntü Sınıflandırması}
+\author{\TODO{Öğrenci 1 Ad Soyad, No} \and \TODO{Öğrenci 2 Ad Soyad, No}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% ---------------------------------------------------------------------
+% ABSTRACT — written last. macro-F1 headline; frozen final = exp 11 + TTA (0.6075);
+% official 5-fold; literature contextual; no SOTA. Every number traceable.
+\begin{abstract}
+Bu çalışmada, HiperKvasir veri kümesindeki 23 sınıflı, sınıf dağılımı oldukça
+dengesiz gastrointestinal endoskopi görüntü sınıflandırması problemi ele
+alınmaktadır. Önceden eğitilmiş üç CNN omurga ağı (ResNet50, MobileNetV2 ve
+EfficientNetB0) özellik çıkarıcı olarak kullanılmış; her daldan elde edilen
+özellikler 512 boyuta izdüşürülerek birleştirme (concatenation), ağırlıklı ve
+gelişmiş bir kapılı (GMU) füzyon ile birleştirilmiş ve sabit bir çok katmanlı
+algılayıcı (MLP) ile sınıflandırılmıştır. Değerlendirme, sızıntıya karşı
+denetlenmiş resmi 5-katlı (5-fold) protokol altında yürütülmüş; ana ölçüt olarak
+makro-F1, destekleyici ölçüt olarak doğruluk kullanılmış ve sonuçlar önyükleme
+(bootstrap) \%95 güven aralıklarıyla raporlanmıştır. Çapraz doğrulamada en iyi
+yapılandırma üçlü ağırlıklı fine-tune olmuş ve birleştirme füzyonundan
+istatistiksel olarak ayırt edilebilmiştir (örtüşmeyen güven aralıkları); GMU ise
+birleştirmeye kıyasla anlamlı bir kazanım sağlamamıştır. Nihai model, bu
+yapılandırmanın test zamanı veri artırmalı (TTA) sürümüdür; havuzlanmış
+($n=10{.}662$) makro-F1 değeri $0{,}6075$ (\%95 GA $[0{,}5860,\,0{,}6296]$) iken
+doğruluk yaklaşık $0{,}88$'dir. Bu büyük fark, dengesizliğin doğrudan kanıtıdır:
+çok düşük destekli nadir sınıflar makro-F1'i aşağı çeker. En iyi yapılandırma
+üzerinde denenen toplamsal teknikler (focal loss, TTA, sızıntısız seed
+topluluğu) \%95 güven aralığı düzeyinde en iyi çapraz-entropi yapılandırmasını
+geçememiştir; bu, bu ek tekniklerle elde edilebilecek iyileşmenin sınırlı
+kaldığını gösterir.
+Literatür sonuçları, protokol farkları nedeniyle yalnızca bağlamsal olarak ele
+alınmış; güncel-en-iyi (state-of-the-art) bir başarı iddiasında
+bulunulmamıştır.
+\end{abstract}
+
+% ---------------------------------------------------------------------
+\input{sections/01_introduction}
+\input{sections/01b_related_work}
+\input{sections/02_methodology}
+\input{sections/03_experimental_setup}
+\input{sections/04_results}
+\input{sections/05_discussion}
+\input{sections/06_conclusion}
+
+% ---------------------------------------------------------------------
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

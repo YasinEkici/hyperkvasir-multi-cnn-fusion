@@ -1,0 +1,156 @@
+% =====================================================================
+% 2. YÖNTEM (Methodology)
+% Evidence base: project_structure.md §2 (verified facts), configs/method/*.yaml,
+%                configs/training/{frozen_extraction,finetune_wide}.yaml,
+%                src/models/* docstrings, docs/decisions.md (PLD-04..08).
+% Only IMPLEMENTED methods are described. No results here.
+% =====================================================================
+\section{Yöntem}
+\label{sec:methodology}
+
+Önerilen mimari üç bileşenden oluşur: önceden eğitilmiş CNN omurga ağları ile
+özellik çıkarımı, bu özelliklerin ortak bir boyuta izdüşürülüp füzyonlanması ve
+birleşik temsilin bir MLP sınıflandırıcı ile sınıflandırılması. Bu bölümde her
+bileşen ve transfer öğrenme kurulumu açıklanmaktadır.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{architecture.pdf}
+\caption{Çoklu-CNN özellik füzyon mimarisi: üç önceden eğitilmiş omurga (ResNet50,
+MobileNetV2, EfficientNetB0; frozen ya da son 3 blok fine-tune, BatchNorm
+dondurulmuş) $\to$ 512-boyutlu dal projeksiyonu (Linear$\to$LayerNorm$\to$GELU)
+$\to$ füzyon (concat / weighted / GMU) $\to$ MLP. Soldaki kesikli kutu omurgaları,
+ortadaki kesikli kutu projeksiyon dallarını gösterir. Çıkarımda final model TTA
+(base/hflip/scale/scale\_hflip; softmax ortalaması) kullanır.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Omurga Ağlar (Özellik Çıkarıcılar)}
+\label{subsec:backbones}
+Üç omurga ağ olarak ResNet50~\cite{he2016resnet},
+MobileNetV2~\cite{sandler2018mobilenetv2} ve
+EfficientNetB0~\cite{tan2019efficientnet} kullanılır. Her ağ ImageNet üzerinde
+önceden eğitilmiş torchvision uygulamasından alınır ve sınıflandırma başlığı
+kaldırılarak son havuzlama (pooling) katmanından özellik vektörü elde edilir.
+Çıkış özellik boyutları ResNet50 için 2048, MobileNetV2 ve EfficientNetB0 için
+1280'dir.
+Tüm görüntüler ağlara $224\times224$ çözünürlükte ve ImageNet ortalama/standart
+sapma değerleriyle normalize edilerek verilir; böylece üç omurga ağ kontrollü
+ve karşılaştırılabilir koşullarda çalışır.
+
+\subsection{Projeksiyon Katmanı}
+\label{subsec:projection}
+Omurga ağların özellik boyutları birbirinden farklı olduğundan (2048'e karşı
+1280), füzyondan önce her dal ortak bir boyuta izdüşürülür. Her omurga ağın
+özelliği 512 boyutlu bir projeksiyona eşlenir; bu projeksiyon kavramsal olarak
+bir doğrusal katman, ardından katman normalizasyonu (LayerNorm) ve GELU
+aktivasyonundan oluşur. Bu adım hem boyut uyumsuzluğunu giderir
+hem de farklı ölçeklerdeki özellikleri füzyon için ortak bir temsile getirir.
+
+\subsection{Birleştirme (Concatenation) Füzyonu}
+\label{subsec:concat}
+Birleştirme füzyonu, projeksiyon sonrası dal özelliklerini özellik ekseninde
+uç uca ekleyerek tek bir vektör oluşturur. $N$ dal için her biri 512 boyutlu
+olduğundan birleşik temsil $N\times512$ boyutludur (ör. üçlü birleşimde 1536).
+Bu yöntem öğrenilebilir bir füzyon parametresi içermez ve tüm dalların bilgisini
+eşit biçimde aşağı akışa taşır.
+
+\subsection{Ağırlıklı (Weighted) Füzyon}
+\label{subsec:weighted}
+Ağırlıklı füzyon, dalların katkısını öğrenilebilir kılar. $N$ dal için
+$\mathbf{a}\in\mathbb{R}^{N}$ öğrenilebilir bir parametre vektörüdür (uygulamada
+sıfırlarla, yani düzgün başlangıçla ilklendirilir). Dal ağırlıkları bu vektörün
+softmax'ı ile elde edilir ve projekte edilmiş dal özelliklerinin
+$\mathbf{x}_i\in\mathbb{R}^{512}$ ağırlıklı toplamı alınır:
+\begin{equation}
+  \mathbf{w} = \operatorname{softmax}(\mathbf{a}), \qquad
+  \mathbf{h} = \sum_{i=1}^{N} w_i\,\mathbf{x}_i ,
+\end{equation}
+burada $\sum_i w_i = 1$ ve birleşik temsil $\mathbf{h}$ yine 512 boyutludur.
+Birleştirme füzyonundan farkı, hangi omurga ağın temsiline ne ölçüde
+güvenileceğinin eğitim sırasında ayarlanabilmesidir.
+
+\subsection{Gelişmiş Füzyon: GMU (İsteğe Bağlı Eksen)}
+\label{subsec:gmu}
+Zorunlu iki füzyon yöntemine ek olarak, gelişmiş bir kapılı çok-kipli birim
+(Gated Multimodal Unit, GMU) varyantı da uygulanmış ve aynı protokol altında
+değerlendirilmiştir~\cite{arevalo2017gmu}. Sabit ağırlıklı füzyondan farklı
+olarak GMU, kapı (gate) ağırlıklarını her örnek için ayrı hesaplar. Bu projede
+Arevalo ve ark.\ §3.1'deki iki-kipli formülasyonun $N$-dal softmax
+genelleştirmesi kullanılır:
+\begin{align}
+  \mathbf{h}_i &= \tanh(W_i\,\mathbf{x}_i), \qquad i = 1,\dots,N \\
+  \mathbf{z}   &= \operatorname{softmax}\!\big(W_z\,[\mathbf{x}_1,\dots,\mathbf{x}_N]\big) \in \mathbb{R}^{N} \\
+  \mathbf{h}   &= \sum_{i=1}^{N} z_i\,\mathbf{h}_i ,
+\end{align}
+burada $[\cdot,\dots,\cdot]$ birleştirme işlemidir ve $W_z$ kapısı, dönüşümden
+önceki ham dal özelliklerini girdi olarak alır (paper §3.1). Softmax, iki-kipli
+$\sigma/(1-\sigma)$ çiftini, ağırlıkları toplamı 1 olan $N$-yönlü bir yarışmaya
+genelleştirir.
+
+\subsection{MLP Sınıflandırıcı}
+\label{subsec:mlp}
+Birleşik özellik vektörü, tek bir çok katmanlı algılayıcı (MLP) ile 23 sınıfa
+sınıflandırılır. Sınıflandırıcı bir gizli katman (boyut 256) ve 0,3 oranında
+dropout içerir. Sınıflandırıcı tüm deneylerde MLP olarak sabit tutulmuştur;
+SVM, RandomForest veya XGBoost gibi alternatif sınıflandırıcılar
+değerlendirilmemiştir. Bu sayede karşılaştırmalar omurga ağ,
+füzyon ve transfer öğrenme eksenlerinde yoğunlaşır.
+
+\subsection{Frozen Çıkarım ve Fine-tuning}
+\label{subsec:transfer}
+İki transfer öğrenme yaklaşımı karşılaştırılır:
+\begin{itemize}
+  \item \textbf{Frozen özellik çıkarımı:} Omurga ağların ağırlıkları
+        dondurulur; özellikler bir kez çıkarılıp önbelleğe alınır ve yalnızca
+        projeksiyon, füzyon ve MLP bileşenleri eğitilir.
+  \item \textbf{Fine-tuning:} Her omurga ağın son üç bloğu çözülerek uçtan uca
+        eğitilir. Bu kurulumda katman bazlı azalan öğrenme oranı (LLRD)
+        kullanılır ve dondurulmuş bloklardaki BatchNorm istatistikleri,
+        proje kuralı gereği güncellenmeden tutulur.
+\end{itemize}
+Her iki yaklaşımda da sınıf dengesizliği eğitim aşamasında ağırlıklı örnekleme
+(weighted sampler) ile ele alınır. Eğitim ayrıntıları ve hiperparametreler
+Bölüm~\ref{sec:setup}'te verilmiştir.
+
+\subsection{Sınıf Dengesizliğine Duyarlı Kayıp: Focal Loss (Ablasyon)}
+\label{subsec:focal}
+Sınıf dengesizliğini kayıp düzeyinde ele almak için en iyi yapılandırma (exp 11,
+üçlü ağırlıklı fine-tune) üzerinde tek değişkenli bir ablasyon olarak focal
+loss~\cite{lin2017focal} denenmiştir. Lin ve ark.\ §3.2, eşitlik
+(5)'teki $\alpha$-dengeli biçim kullanılır:
+\begin{equation}
+  \mathrm{FL}(p_t) = -\,\alpha_t\,(1 - p_t)^{\gamma}\,\log(p_t),
+\end{equation}
+burada $p_t$ gerçek sınıfın model olasılığı, $\gamma \ge 0$ odaklama
+parametresidir; paper'ın önerdiği $\gamma = 2{,}0$ alınmıştır. $(1-p_t)^{\gamma}$
+modülasyon çarpanı kolay örnekleri ($p_t > 0{,}5$) baskılayıp eğitimi zor
+örneklere yöneltir. Bu ablasyon, focal loss ile etiket yumuşatmayı kasıtlı
+olarak \emph{birleştirmez}: etiket yumuşatma hedef dağılımını değiştirir ve
+$p_t$'ye dayanan focal modülasyonuyla çakışır. Bu nedenle focal yapılandırması,
+exp 11'in CE yapılandırmasından yalnızca kayıp bloğunda ayrılır; diğer tüm
+hiperparametreler aynıdır (temiz, tek değişkenli karşılaştırma).
+
+\subsection{Test Zamanı Veri Artırma (TTA)}
+\label{subsec:tta}
+Nihai modelin çıkarım reçetesi, eğitim maliyeti olmadan uygulanan
+deterministik bir test zamanı veri artırmadır (TTA). Her görüntü için dört
+deterministik görünüm üretilir --- (i) \emph{base}: Resize(256)$\rightarrow$
+CenterCrop(224); (ii) \emph{hflip}: base + yatay çevirme; (iii) \emph{scale}:
+Resize(224)$\rightarrow$CenterCrop(224); (iv) \emph{scale\_hflip}: scale + yatay
+çevirme --- ve bu görünümlerin softmax olasılıkları görüntü başına ortalanır. TTA
+\emph{model başına} ve \emph{örnek başına} uygulanır; herhangi bir kat (fold)
+sınırını aşmadığından sızıntıya yol açmaz.
+
+\subsection{Sızıntısız Seed Topluluğu (Ensemble)}
+\label{subsec:ensemble}
+Resmi 5-katlı protokolde yalnızca sızıntısız topluluk yöntemine izin verilir.
+Seed topluluğu, aynı yapılandırmanın farklı tohumlarla (seed)
+eğitilmiş modellerinin softmax olasılıklarını \emph{her katın kendi ayrık test
+kümesi içinde} ortalayıp ardından 5 katı havuzlayarak her örneğin tam olarak bir
+kez görünmesini sağlar ($n = 10{.}662$). Olasılıklar her zaman softmax düzeyinde
+ortalanır; argmax oylaması kullanılmaz. Katlar arası saf model ortalaması bu
+çalışmada kullanılmamıştır: 5 kat modelini tüm veri kümesi üzerinde ortalamak
+sızıntıya yol açar,
+çünkü her örnek katların 4'ünün eğitim kümesinde yer almıştır. Bu nedenle
+modeller hiçbir zaman katlar arasında topluluk haline getirilmez.
