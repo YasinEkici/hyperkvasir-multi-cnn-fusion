@@ -53,21 +53,19 @@ karşılaştırmalar üzerine kuruludur. Üç eksende karşılaştırma yapılı
         (frozen) çıkarım ile son katman bloklarının ince ayarlandığı
         (fine-tuning) yaklaşımın karşılaştırılması.
 \end{itemize}
-Sınıflandırıcı tüm bu karşılaştırmalarda sabittir ve proje kararları gereği
-yalnızca bir çok katmanlı algılayıcı (MLP) olarak seçilmiştir; bu nedenle
-sınıflandırıcı bazlı bir karşılaştırma yapılmamıştır. Ödev metnindeki
-``3 sınıflandırıcı'' ifadesinin sehven yazıldığı eğitmen tarafından teyit
-edilmiştir; sınıflandırıcı MLP olarak sabitlenmiştir (PLD-06) ve karşılaştırmalar
-yalnızca yukarıdaki üç eksende yapılır.
+Sınıflandırıcı tüm bu karşılaştırmalarda sabittir ve yalnızca bir çok katmanlı
+algılayıcı (MLP) olarak seçilmiştir; bu nedenle sınıflandırıcı bazlı bir
+karşılaştırma yapılmamış, karşılaştırmalar yalnızca yukarıdaki üç eksende
+yürütülmüştür.
 
 Bu üç temel eksene ek olarak, en iyi yapılandırmanın üzerinde toplamsal
 (additive) ablasyonlar da değerlendirilmiştir: sınıf dengesizliğine duyarlı
 focal loss, test zamanı veri artırma (TTA) ve sızıntısız seed topluluğu. Bu
-ablasyonların hiçbiri, \%95 güven aralığı düzeyinde çapraz-doğrulamadaki CE
-şampiyonunu (üçlü ağırlıklı fine-tune) istatistiksel olarak geçememiştir;
-final model olarak bu şampiyonun TTA'lı sürümü dondurulmuştur. Sayısal sonuçlar
-ve dürüst değerlendirme Bölüm~\ref{sec:results} ve Bölüm~\ref{sec:discussion}'de
-verilir.
+ablasyonların hiçbiri, \%95 güven aralığı düzeyinde çapraz-doğrulamadaki en iyi
+çapraz-entropi yapılandırmasını (üçlü ağırlıklı fine-tune) istatistiksel olarak
+geçememiştir; nihai model olarak bu yapılandırmanın TTA'lı sürümü seçilmiştir.
+Sayısal sonuçlar ve değerlendirme Bölüm~\ref{sec:results} ve
+Bölüm~\ref{sec:discussion}'de verilir.
 
 % --- Metrik tercihi ve protokol ---
 Değerlendirmede ana ölçüt olarak makro-F1 kullanılmış, doğruluk ise yalnızca

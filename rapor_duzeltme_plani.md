@@ -47,7 +47,6 @@ Ana sorunlar:
 - Bazı terimler gereğinden fazla savunmacı veya konuşma dili gibi.
 - Bazı iç referanslar (`PLD-06`, `D-07`, `docs/...`, `results/tables/...`) final raporda fazla teknik/proje içi görünüyor.
 - Küçük ama önemli sayısal ve tablo referansı tutarsızlıkları var.
-- Ek katkılar değerli olsa da, ana ödev kapsamının önüne geçmeyecek şekilde sunulmalı.
 
 ---
 
@@ -72,11 +71,6 @@ Sorun:
 Nihai model
 ```
 
-veya:
-
-```text
-Sabitlenen final model
-```
 
 Örnek değişiklik:
 
@@ -236,7 +230,7 @@ Daha doğal öneri:
 Ödev yönergesinde sınıflandırıcı olarak MLP belirtildiğinden, bu çalışmada sınıflandırıcı sabit tutulmuş; karşılaştırmalar CNN omurgaları, füzyon yöntemleri ve transfer öğrenme stratejileri üzerinden yapılmıştır.
 ```
 
-Eğer eğitmen teyidi mutlaka korunacaksa, ana metinde değil kısa bir dipnotta veya ek açıklamada tutulması daha iyi olur.
+Buradan eğitmen kısmını komple çıkar, çünkü başından beri sadece MLP olduğunu biliyorduk.
 
 ---
 
@@ -265,39 +259,6 @@ Deneyler yerel RTX 5080 GPU ortamında yürütülmüştür. Yeniden üretilebili
 Bu hali yeterince teknik ama final ödev raporuna daha uygun.
 
 ---
-
-## 3. Kapsam Dışı Değil, Ama Kısaltılması Faydalı Olan Kısımlar
-
-### 3.1. GMU
-
-GMU yaratıcı ek katkı olarak kalabilir. Ödevde yaratıcı yaklaşımların ekstra puan getirebileceği belirtiliyor. Bu yüzden GMU konu dışı değil.
-
-Ancak GMU, zorunlu concat/weighted fusion karşılaştırmasının önüne geçmemeli. Metinde GMU şu şekilde sunulmalı:
-
-```text
-Zorunlu iki füzyon yöntemine ek olarak, karşılaştırmayı genişletmek amacıyla GMU varyantı da denenmiştir.
-```
-
-### 3.2. Focal loss, TTA ve ensemble
-
-Bu teknikler değerli ek ablasyonlardır, fakat ana ödev kapsamı değiller.
-
-Önerilen sunum:
-
-- Ana deneyler: CNN omurgaları + concat/weighted fusion + MLP + frozen/fine-tune
-- Ek deneyler: focal loss, TTA, seed ensemble
-
-Bunlar “ana yöntem” gibi değil, “ek ablasyon” gibi sunulmalı.
-
-### 3.3. Literatür karşılaştırması
-
-Literatür bölümü genel olarak iyi. Ancak ödev yönergesi, seçilen veri kümesinin son 3 yılda 2-3 çalışmada kullanılmış olmasının karşılaştırma için önemli olduğunu söylüyor.
-
-Kontrol önerisi:
-
-- Mümkünse HyperKvasir kullanan 2024/2025 tarihli bir çalışma daha eklenebilir.
-- Eğer eklenmeyecekse, mevcut literatür karşılaştırması “bağlamsal” olarak korunmalı ve doğrudan üstünlük iddiası yapılmamalı.
-
 ---
 
 ## 4. Uygulanacak Düzeltme Sırası
@@ -329,9 +290,7 @@ Tablo 2: Seçilmiş 5-katlı çapraz doğrulama sonuçları, ortalama ± standar
 
 ### Aşama 3 — Bölüm sadeleştirmesi
 
-1. 3.5 Yeniden Üretilebilirlik ve Ortam bölümünü kısalt.
-2. Focal loss, TTA ve ensemble bölümlerini koru ama ana yöntemin önüne geçmeyecek şekilde sadeleştir.
-3. 4.5 Toplamsal Ablasyonlar bölümünde “dürüst baş-başa” gibi ifadeleri değiştir.
+1. 4.5 Toplamsal Ablasyonlar bölümünde “dürüst baş-başa” gibi ifadeleri değiştir.
 
 Önerilen başlık:
 
@@ -389,97 +348,9 @@ Düzeltmeler sırasında aşağıdaki bilimsel kararlar korunmalı:
 
 ---
 
-## 6. Agent’a Verilecek Komut
-
-Aşağıdaki komut doğrudan kod/rapor düzenleyen agent’a verilebilir.
-
-```text
-Follow the project/report rules and do not invent any new numbers or results.
-
-Task: Clean and revise the Turkish final report so that it reads like a natural, academic deep learning course project report, while preserving all scientific claims, tables, metrics, and conclusions.
-
-Read the current LaTeX report files first:
-- main.tex
-- 01_introduction.tex
-- 02_methodology.tex
-- 03_experimental_setup.tex
-- 04_results.tex
-- 05_discussion.tex
-- 06_conclusion.tex
-- references.bib
-Also use the assignment document as the scope reference:
-- Dönem Projesi 2026- DL (3).docx
-
-Scope constraints:
-- Do not add new experiments.
-- Do not invent or change numerical results, except for correcting internal inconsistencies against the existing tables.
-- Preserve the main result: exp 11 weighted fine-tune is the best CV configuration, and exp 11 + TTA is the selected final/nihai evaluated model.
-- Preserve macro-F1 as the primary metric and accuracy as a supporting metric.
-- Preserve the official 5-fold protocol explanation.
-- Preserve the three required CNNs: ResNet50, MobileNetV2, EfficientNetB0.
-- Preserve the required fusion methods: concatenation and weighted fusion.
-- Preserve MLP as the fixed classifier.
-- Keep GMU, focal loss, TTA, and seed ensemble only as additional/optional ablation experiments; do not let them overshadow the required assignment scope.
-- Do not make state-of-the-art claims.
-
-Required edits:
-1. Replace confusing uses of “Donmuş final model” with “nihai model” or “sabitlenen final model”. Keep “frozen feature extraction” only when describing the transfer learning regime.
-2. Remove or rewrite internal repo/agent references from the main report body, including:
-   - PLD-*
-   - D-*
-   - docs/...
-   - results/tables/...
-   - src/...
-   - resolved_config.yaml
-   - git SHA
-   - provenance/orchestration language
-3. Rewrite overly defensive or informal wording:
-   - “dürüstçe raporlanmalıdır”
-   - “gizlenmemeli”
-   - “CE şampiyonu”
-   - “ikinci tohum daha zayıf çekiliştir”
-   - “mimarinin bu protokoldeki tavanına yakın olduğunu gösterir”
-   - “yasaktır”
-   - “manşet sonuç”
-   Use neutral academic wording instead.
-4. Fix the MCC inconsistency:
-   - In discussion, replace MCC (0,8662) with the value used in Table 4, currently 0,8599, unless the table itself says otherwise.
-5. Fix the table reference error:
-   - The class-wise precision/recall/F1/support table is Table 6, not Table 3.
-6. Rewrite the “3 classifiers” explanation more calmly:
-   Suggested wording:
-   “Ödev yönergesinde sınıflandırıcı olarak MLP belirtildiğinden, bu çalışmada sınıflandırıcı sabit tutulmuş; karşılaştırmalar CNN omurgaları, füzyon yöntemleri ve transfer öğrenme stratejileri üzerinden yapılmıştır.”
-7. Shorten the “Yeniden Üretilebilirlik ve Ortam” section:
-   Suggested wording:
-   “Deneyler yerel RTX 5080 GPU ortamında yürütülmüştür. Yeniden üretilebilirlik için sabit tohum kullanılmış, deney konfigürasyonları ve metrik çıktıları proje dosyaları içinde saklanmıştır. Raporlanan 5-katlı çapraz doğrulama ve final değerlendirme sonuçları aynı veri bölme protokolü altında üretilmiştir.”
-8. Simplify table captions that currently contain repository paths. Use normal academic captions instead.
-9. Keep the literature comparison contextual. Do not add direct superiority claims.
-10. If possible, check whether the literature section satisfies the assignment’s “recent studies” expectation. If a recent HyperKvasir study is already in references, mention it naturally; otherwise leave a TODO comment rather than inventing a citation.
-
-After editing:
-- Run a search over the LaTeX files for these strings and ensure they are either removed or justified:
-  Donmuş
-  PLD-
-  D-
-  docs/
-  results/
-  src/
-  dürüst
-  gizlenmemeli
-  şampiyon
-  çekiliş
-  yasaktır
-  manşet
-  provenance
-  orchestration
-  0,8662
-- Compile the LaTeX project if possible.
-- Report exactly what files were changed and summarize each change.
-```
-
 ---
 
-## 7. Beklenen Sonuç
+## 6. Beklenen Sonuç
 
 Bu plan uygulandıktan sonra rapor:
 
@@ -487,4 +358,4 @@ Bu plan uygulandıktan sonra rapor:
 - Gereksiz “agent/repo iç dokümanı” havasından arınacak.
 - Daha doğal ve akademik bir Türkçe üsluba yaklaşacak.
 - Sayısal ve tablo referansı hataları düzelecek.
-- Ek katkılar korunacak, ancak ana ödev gereksinimlerinin önüne geçmeyecek.
+

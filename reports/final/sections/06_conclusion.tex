@@ -13,15 +13,15 @@ Bu çalışmada, HiperKvasir 23-sınıf gastrointestinal endoskopi görevi için
 omurga ağ, füzyon (birleştirme / ağırlıklı / GMU) ve transfer öğrenme (frozen /
 fine-tune) eksenlerinde yürütülmüş; ana ölçüt olarak makro-F1 kullanılmıştır.
 Resmi 5-katlı protokolde en iyi yapılandırma üçlü ağırlıklı fine-tune (exp 11)
-olmuş; donmuş final model bu yapılandırmanın TTA'lı sürümüdür (havuzlanmış
+olmuş; nihai model bu yapılandırmanın TTA'lı sürümüdür (havuzlanmış
 makro-F1 $0{,}6075$). Sayısal sonuçlar ve yorumlar
 Bölüm~\ref{sec:results}--\ref{sec:discussion}'de verilmiştir.
 
 \paragraph{Sınırlamalar.}
 En iyi yapılandırmanın üzerinde değerlendirilen toplamsal ablasyonların --- focal
 loss, TTA ve sızıntısız seed topluluğu --- hiçbiri \%95 güven aralığı düzeyinde
-CE şampiyonunu istatistiksel olarak geçememiştir; bu, mimarinin bu protokoldeki
-tavanına yakın olduğunu gösterir. Kalan açığın başlıca kaynağı, çok düşük destekli
+en iyi çapraz-entropi yapılandırmasını istatistiksel olarak geçememiştir; bu, bu
+ek tekniklerle elde edilebilecek iyileşmenin sınırlı kaldığını gösterir. Kalan açığın başlıca kaynağı, çok düşük destekli
 (support $\le 10$) nadir sınıflardır; bu, kayıp/çıkarım/topluluk düzeyindeki
 ayarlamalarla kapanmayan bir veri kıtlığı sınırıdır. Ayrıca, farklı protokol ve
 ön işleme kullanan literatür sonuçlarıyla doğrudan baş-başa karşılaştırma
@@ -29,7 +29,7 @@ yapılamaz; yalnızca resmi-bölme tabanlı sonuçlar bağlamsal bir çapa sağl
 olarak, final model tek tohumla (seed 42) eğitilmiştir.
 
 \paragraph{Gelecek çalışma.}
-İleride, donmuş model üzerinde yorumlanabilirlik analizleri --- Grad-CAM++
+İleride, nihai model üzerinde yorumlanabilirlik analizleri --- Grad-CAM++
 \cite{chattopadhyay2018gradcampp} ile sınıf-etkin bölge görselleştirmesi ve
 birleşik 512-boyutlu özelliklerin UMAP~\cite{mcinnes2018umap} ile izdüşürülmesi
 --- eklenebilir. Eğitim reçetesinin daha ileri bir sürümü (recipe-v2) ve daha

@@ -68,14 +68,15 @@ makro-F1, destekleyici ölçüt olarak doğruluk kullanılmış ve sonuçlar ön
 (bootstrap) \%95 güven aralıklarıyla raporlanmıştır. Çapraz doğrulamada en iyi
 yapılandırma üçlü ağırlıklı fine-tune olmuş ve birleştirme füzyonundan
 istatistiksel olarak ayırt edilebilmiştir (örtüşmeyen güven aralıkları); GMU ise
-birleştirmeye kıyasla anlamlı bir kazanım sağlamamıştır. Donmuş final model, bu
+birleştirmeye kıyasla anlamlı bir kazanım sağlamamıştır. Nihai model, bu
 yapılandırmanın test zamanı veri artırmalı (TTA) sürümüdür; havuzlanmış
 ($n=10{.}662$) makro-F1 değeri $0{,}6075$ (\%95 GA $[0{,}5860,\,0{,}6296]$) iken
 doğruluk yaklaşık $0{,}88$'dir. Bu büyük fark, dengesizliğin doğrudan kanıtıdır:
 çok düşük destekli nadir sınıflar makro-F1'i aşağı çeker. En iyi yapılandırma
 üzerinde denenen toplamsal teknikler (focal loss, TTA, sızıntısız seed
-topluluğu) \%95 güven aralığı düzeyinde temel çapraz-entropi modelini
-geçememiştir; bu, mimarinin bu protokoldeki tavanına yakın olduğunu gösterir.
+topluluğu) \%95 güven aralığı düzeyinde en iyi çapraz-entropi yapılandırmasını
+geçememiştir; bu, bu ek tekniklerle elde edilebilecek iyileşmenin sınırlı
+kaldığını gösterir.
 Literatür sonuçları, protokol farkları nedeniyle yalnızca bağlamsal olarak ele
 alınmış; güncel-en-iyi (state-of-the-art) bir başarı iddiasında
 bulunulmamıştır.

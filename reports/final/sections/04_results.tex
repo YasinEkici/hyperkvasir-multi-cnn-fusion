@@ -18,8 +18,8 @@
 
 Sonuçlar dört eksende sunulur: (i) fold-0 üzerinde tek/ikili/üçlü ablasyon,
 (ii) seçilmiş yapılandırmalar için 5-katlı çapraz doğrulama (CV), (iii) en iyi
-yapılandırma üzerinde toplamsal ablasyonların dürüst baş-başa
-karşılaştırması ve (iv) donmuş final modelin sınıf-bazlı çözümlemesi. Ana ölçüt
+yapılandırma üzerinde toplamsal ablasyonların baş-başa
+karşılaştırması ve (iv) nihai modelin sınıf-bazlı çözümlemesi. Ana ölçüt
 makro-F1, destekleyici ölçüt ise doğruluktur (accuracy).
 
 \subsection{Tek/İkili/Üçlü Ablasyon (fold-0)}
@@ -35,7 +35,7 @@ sınıf oluşmamıştır.
 \begin{table}[H]
 \centering
 \caption{Fold-0 ablasyonu (resmi 5-katlı bölme, fold 0). Acc = doğruluk,
-M-F1 = makro-F1. Kaynak: \texttt{results/tables/ablation\_table.md}.}
+M-F1 = makro-F1.}
 \label{tab:ablation}
 \begin{tabular}{llll cc}
 \toprule
@@ -71,8 +71,7 @@ düzeyinde birleştirmeyi geçmez (fark $\approx 0{,}002$, gürültü içinde).
 
 \begin{table}[H]
 \centering
-\caption{Seçilmiş 5-katlı CV, ortalama $\pm$ standart sapma.
-Kaynak: \texttt{results/tables/cv\_*\_summary.json}.}
+\caption{Seçilmiş 5-katlı çapraz doğrulama, ortalama $\pm$ standart sapma.}
 \label{tab:cv}
 \begin{tabular}{ll l cc}
 \toprule
@@ -100,7 +99,7 @@ olarak ayırt edilebilir. Buna karşılık GMU ve birleştirme aralıkları büy
 \begin{table}[H]
 \centering
 \caption{Havuzlanmış makro-F1 ve \%95 güven aralığı ($n=10{.}662$; 1000 önyükleme,
-tohum 42). Kaynak: \texttt{results/tables/ci\_*.json}.}
+tohum 42).}
 \label{tab:ci}
 \begin{tabular}{ll l c c}
 \toprule
@@ -122,15 +121,14 @@ korelasyon katsayısı (MCC) ve Cohen Kappa değerlerini verir. Exp 11 her
 destekleyici ölçütte de en iyidir. Makro-F1 ($\approx 0{,}60$) ile örnek-ağırlıklı
 F1 ($\approx 0{,}87$) arasındaki yaklaşık $0{,}27$'lik fark, sınıf dengesizliğinin
 doğrudan kanıtıdır: aggregate ölçütler nadir sınıflardaki başarısızlığı maskeler.
-Donmuş final model (exp 11 + TTA) için bu değerler biraz daha yüksektir: Kappa
+Nihai model (exp 11 + TTA) için bu değerler biraz daha yüksektir: Kappa
 $0{,}8661$ ve makro tek-vs-rest ROC-AUC $0{,}967$ (bu iki ölçüt literatürle
 karşılaştırmada Bölüm~\ref{subsec:contextual}'da kullanılır).
 
 \begin{table}[H]
 \centering
 \caption{Havuzlanmış destekleyici metrikler ($n=10{.}662$). micro-F1 tek etiketli
-çok sınıflı durumda doğruluğa eşittir. Kaynak:
-\texttt{results/tables/extra\_metrics\_*.json}.}
+çok sınıflı durumda doğruluğa eşittir.}
 \label{tab:extra}
 \begin{tabular}{ll ccccc}
 \toprule
@@ -145,35 +143,34 @@ ID & Yapılandırma & Acc / micro-F1 & Makro-F1 & Weighted-F1 & MCC & Kappa \\
 \end{tabular}
 \end{table}
 
-\subsection{Toplamsal Ablasyonlar: Dürüst Baş-Başa Karşılaştırma}
+\subsection{Toplamsal Ablasyonlar (Baş-Başa Karşılaştırma)}
 \label{subsec:week35}
 En iyi yapılandırma (exp 11) üzerinde dört toplamsal teknik
 değerlendirilmiştir: focal loss, TTA, sızıntısız seed topluluğu ve
 topluluk+TTA. Tablo~\ref{tab:week35} havuzlanmış makro-F1 ile \%95 güven
-aralıklarını verir. \textbf{Hiçbir teknik, CE şampiyonunu (exp 11 base,
-$0{,}6000$) \%95 güven aralığı düzeyinde geçememiştir}: tüm aralıklar CE
-şampiyonunun aralığıyla örtüşür. Focal loss nokta tahmini olarak CE'nin altında
-kalmıştır ($0{,}5914$). TTA en iyi nokta tahminini verir ($0{,}6075$), ancak
-CE'ye göre $+0{,}0075$'lik fark aralık örtüşmesi içindedir; yani istatistiksel
-olarak anlamlı bir kazanım değildir. Seed topluluğu makro-F1'i artırmamıştır
-($0{,}5971$; ikinci tohum daha zayıf çekiliştir), yalnızca destekleyici
-metriklerde (acc/weighted-F1/MCC) küçük bir iyileşme ve daha dar bir aralık
-sağlamıştır. Bu nedenle donmuş final model, sıfır ek eğitim maliyetiyle en iyi
-nokta tahminini veren ve aggregate değerleri hiçbir zaman düşürmeyen
-\textbf{exp 11 + TTA} olarak seçilmiştir (bkz.\ \texttt{docs/FINAL\_MODEL.md}).
+aralıklarını verir. \textbf{Hiçbir teknik, en iyi çapraz-entropi yapılandırmasını
+(exp 11 base, $0{,}6000$) \%95 güven aralığı düzeyinde geçememiştir}: tüm
+aralıklar bu yapılandırmanın aralığıyla örtüşür. Focal loss nokta tahmini
+olarak CE'nin altında kalmıştır ($0{,}5914$). TTA en iyi nokta tahminini verir
+($0{,}6075$), ancak CE'ye göre $+0{,}0075$'lik fark aralık örtüşmesi içindedir;
+yani istatistiksel olarak anlamlı bir kazanım değildir. Seed topluluğu makro-F1'i
+artırmamıştır ($0{,}5971$; ek seed bir kazanım getirmemiştir), yalnızca
+destekleyici metriklerde (acc/weighted-F1/MCC) küçük bir iyileşme ve daha dar bir
+aralık sağlamıştır. Bu nedenle nihai model, sıfır ek
+eğitim maliyetiyle en iyi nokta tahminini veren ve aggregate değerleri hiçbir
+zaman düşürmeyen \textbf{exp 11 + TTA} olarak seçilmiştir.
 
 \begin{table}[H]
 \centering
 \caption{En iyi yapılandırma (exp 11) üzerinde toplamsal ablasyonlar, havuzlanmış
-makro-F1 ($n=10{.}662$). Tüm aralıklar CE şampiyonunun aralığıyla örtüşür.
-Kaynak: \texttt{ci\_11\_*\{,\_tta,\_ensemble,\_ensemble\_tta\}.json},
-\texttt{ci\_16\_*.json}.}
+makro-F1 ($n=10{.}662$). Tüm aralıklar en iyi CE yapılandırmasının aralığıyla
+örtüşür.}
 \label{tab:week35}
 \begin{tabular}{l c c}
 \toprule
 Varyant & Makro-F1 (nokta) & \%95 GA \\
 \midrule
-exp 11 base (CE şampiyonu)     & 0.6000 & [0.5814,\,0.6206] \\
+exp 11 base (en iyi CE yap.)   & 0.6000 & [0.5814,\,0.6206] \\
 exp 16 focal ($\gamma{=}2$)    & 0.5914 & [0.5750,\,0.6096] \\
 exp 11 + seed topluluğu        & 0.5971 & [0.5850,\,0.6097] \\
 exp 11 + topluluk + TTA        & 0.6005 & [0.5883,\,0.6135] \\
@@ -182,9 +179,9 @@ exp 11 + topluluk + TTA        & 0.6005 & [0.5883,\,0.6135] \\
 \end{tabular}
 \end{table}
 
-\subsection{Donmuş Final Modelin Sınıf-Bazlı Çözümlemesi}
+\subsection{Nihai Modelin Sınıf-Bazlı Çözümlemesi}
 \label{subsec:t3}
-Tablo~\ref{tab:perclass} donmuş final model (exp 11 + TTA) için havuzlanmış
+Tablo~\ref{tab:perclass} nihai model (exp 11 + TTA) için havuzlanmış
 sınıf-bazlı kesinlik/duyarlılık/F1 ve destek değerlerini verir. Yüksek destekli
 sınıflar (ör.\ \textit{retroflex-stomach}, \textit{bbps-2-3},
 \textit{normal-pylorus}) $0{,}95$'in üzerinde F1 elde ederken, çok düşük
@@ -195,10 +192,9 @@ ile aggregate doğruluk arasındaki farkın kaynağıdır.
 
 \begin{table}[H]
 \centering
-\caption{Sınıf-bazlı metrikler --- donmuş model (exp 11 üçlü ağırlıklı CE + TTA),
+\caption{Sınıf-bazlı metrikler --- nihai model (exp 11 üçlü ağırlıklı CE + TTA),
 havuzlanmış 5-katlı test, $n=10{.}662$. R = nadir (destek $\le 10$). Makro:
-P=0.6162, R=0.6158, \textbf{F1=0.6075}. Kaynak:
-\texttt{results/tables/per\_class\_frozen\_tta.md}.}
+P=0.6162, R=0.6158, \textbf{F1=0.6075}.}
 \label{tab:perclass}
 \small
 \begin{tabular}{l rrr r c}
@@ -241,13 +237,12 @@ verir. Frozen koşular önbelleğe alınmış özellikler üzerinde saniyeler
 mertebesinde çalışırken, fine-tune koşuları kat başına yaklaşık 18--21 dakika
 sürer (RTX 5080). Tüm fine-tune koşuları 12--16 epoch'ta erken durmuştur; bu,
 küçük veri kümesi ve güçlü veri artırma ile tutarlıdır. Duvar-saati değerleri
-yaklaşıktır; \texttt{epoch\_log.jsonl} zaman damgası içermediğinden gözlemlenen
+yaklaşıktır; epoch günlükleri zaman damgası içermediğinden gözlemlenen
 $\approx 1{,}5$ dk/epoch hızından türetilmiştir.
 
 \begin{table}[H]
 \centering
-\caption{Eğitim maliyeti (fold-0 erken-durma epoch'u + yaklaşık duvar-saati).
-Kaynak: \texttt{results/tables/training\_time.md}.}
+\caption{Eğitim maliyeti (fold-0 erken-durma epoch'u + yaklaşık duvar-saati).}
 \label{tab:time}
 \begin{tabular}{ll l r l}
 \toprule
@@ -287,7 +282,7 @@ doğruluk ve makro-F1 karşılaştırması.}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\linewidth]{confusion_matrix_frozen_tta.pdf}
-\caption{Donmuş final model (exp 11 + TTA) için $23\times23$ satır-normalize hata
+\caption{Nihai model (exp 11 + TTA) için $23\times23$ satır-normalize hata
 matrisi, havuzlanmış 5-katlı test ($n{=}10{.}662$). Eksenler sınıf indeksleridir:
 {\footnotesize 0=barretts, 1=bbps-0-1, 2=bbps-2-3, 3=dyed-lifted-polyps,
 4=dyed-resection-margins, 5=hemorroids, 6=ileum, 7=impacted-stool, 8=normal-cecum,
@@ -302,7 +297,7 @@ matrisi, havuzlanmış 5-katlı test ($n{=}10{.}662$). Eksenler sınıf indeksle
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{per_class_f1_frozen_tta.pdf}
-\caption{Donmuş final model için sınıf-bazlı F1 (azalan sırada; kırmızı sütunlar:
+\caption{Nihai model için sınıf-bazlı F1 (azalan sırada; kırmızı sütunlar:
 F1 < 0.3; kırmızı kesikli çizgi: F1 = 0.3 eşiği). Nadir sınıflardaki çöküş açıkça
 görülür.}
 \label{fig:perclassf1}
@@ -318,7 +313,7 @@ güncel-en-iyi (SOTA) iddiasında bulunulmamaktadır.
 
 \paragraph{Aynı protokol (resmi bölme).}
 Tablo~\ref{tab:cmp-borgli}, aynı resmi-bölme ailesinde raporlanan Borgli ve
-ark.~\cite{borgli2020hyperkvasir} baseline'larıyla donmuş final modelimizi
+ark.~\cite{borgli2020hyperkvasir} baseline'larıyla nihai modelimizi
 karşılaştırır. Çok daha \emph{hafif} üçlü füzyonumuz (ResNet50+MobileNetV2+
 EfficientNetB0, $\approx$14M omurga parametresi), Borgli'nin \emph{ağır}
 ResNet-152+DenseNet-161+MLP füzyonuyla makro-F1'de \textbf{başa baştır}

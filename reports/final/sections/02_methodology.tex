@@ -44,7 +44,7 @@ Omurga ağların özellik boyutları birbirinden farklı olduğundan (2048'e kar
 1280), füzyondan önce her dal ortak bir boyuta izdüşürülür. Her omurga ağın
 özelliği 512 boyutlu bir projeksiyona eşlenir; bu projeksiyon kavramsal olarak
 bir doğrusal katman, ardından katman normalizasyonu (LayerNorm) ve GELU
-aktivasyonundan oluşur (PLD-04, PLD-05). Bu adım hem boyut uyumsuzluğunu giderir
+aktivasyonundan oluşur. Bu adım hem boyut uyumsuzluğunu giderir
 hem de farklı ölçeklerdeki özellikleri füzyon için ortak bir temsile getirir.
 
 \subsection{Birleştirme (Concatenation) Füzyonu}
@@ -68,8 +68,7 @@ $\mathbf{x}_i\in\mathbb{R}^{512}$ ağırlıklı toplamı alınır:
 \end{equation}
 burada $\sum_i w_i = 1$ ve birleşik temsil $\mathbf{h}$ yine 512 boyutludur.
 Birleştirme füzyonundan farkı, hangi omurga ağın temsiline ne ölçüde
-güvenileceğinin eğitim sırasında ayarlanabilmesidir. (Kaynak:
-\texttt{src/models/fusion/weighted.py}.)
+güvenileceğinin eğitim sırasında ayarlanabilmesidir.
 
 \subsection{Gelişmiş Füzyon: GMU (İsteğe Bağlı Eksen)}
 \label{subsec:gmu}
@@ -87,15 +86,15 @@ genelleştirmesi kullanılır:
 burada $[\cdot,\dots,\cdot]$ birleştirme işlemidir ve $W_z$ kapısı, dönüşümden
 önceki ham dal özelliklerini girdi olarak alır (paper §3.1). Softmax, iki-kipli
 $\sigma/(1-\sigma)$ çiftini, ağırlıkları toplamı 1 olan $N$-yönlü bir yarışmaya
-genelleştirir. (Kaynak: \texttt{src/models/fusion/gmu.py}.)
+genelleştirir.
 
 \subsection{MLP Sınıflandırıcı}
 \label{subsec:mlp}
 Birleşik özellik vektörü, tek bir çok katmanlı algılayıcı (MLP) ile 23 sınıfa
 sınıflandırılır. Sınıflandırıcı bir gizli katman (boyut 256) ve 0,3 oranında
-dropout içerir. Proje kararları gereği sınıflandırıcı tüm deneylerde MLP olarak
-sabit tutulmuştur (PLD-06); SVM, RandomForest veya XGBoost gibi alternatif
-sınıflandırıcılar değerlendirilmemiştir. Bu sayede karşılaştırmalar omurga ağ,
+dropout içerir. Sınıflandırıcı tüm deneylerde MLP olarak sabit tutulmuştur;
+SVM, RandomForest veya XGBoost gibi alternatif sınıflandırıcılar
+değerlendirilmemiştir. Bu sayede karşılaştırmalar omurga ağ,
 füzyon ve transfer öğrenme eksenlerinde yoğunlaşır.
 
 \subsection{Frozen Çıkarım ve Fine-tuning}
@@ -118,7 +117,7 @@ Bölüm~\ref{sec:setup}'te verilmiştir.
 \label{subsec:focal}
 Sınıf dengesizliğini kayıp düzeyinde ele almak için en iyi yapılandırma (exp 11,
 üçlü ağırlıklı fine-tune) üzerinde tek değişkenli bir ablasyon olarak focal
-loss~\cite{lin2017focal} denenmiştir (karar D-06). Lin ve ark.\ §3.2, eşitlik
+loss~\cite{lin2017focal} denenmiştir. Lin ve ark.\ §3.2, eşitlik
 (5)'teki $\alpha$-dengeli biçim kullanılır:
 \begin{equation}
   \mathrm{FL}(p_t) = -\,\alpha_t\,(1 - p_t)^{\gamma}\,\log(p_t),
@@ -128,14 +127,13 @@ parametresidir; paper'ın önerdiği $\gamma = 2{,}0$ alınmıştır. $(1-p_t)^{
 modülasyon çarpanı kolay örnekleri ($p_t > 0{,}5$) baskılayıp eğitimi zor
 örneklere yöneltir. Bu ablasyon, focal loss ile etiket yumuşatmayı kasıtlı
 olarak \emph{birleştirmez}: etiket yumuşatma hedef dağılımını değiştirir ve
-$p_t$'ye dayanan focal modülasyonuyla çakışır (D-06). Bu nedenle focal
-yapılandırması (\texttt{finetune\_wide\_focal.yaml}), exp 11'in CE
-yapılandırmasından yalnızca kayıp bloğunda ayrılır; diğer tüm hiperparametreler
-aynıdır (temiz, tek değişkenli karşılaştırma).
+$p_t$'ye dayanan focal modülasyonuyla çakışır. Bu nedenle focal yapılandırması,
+exp 11'in CE yapılandırmasından yalnızca kayıp bloğunda ayrılır; diğer tüm
+hiperparametreler aynıdır (temiz, tek değişkenli karşılaştırma).
 
 \subsection{Test Zamanı Veri Artırma (TTA)}
 \label{subsec:tta}
-Donmuş final modelin çıkarım reçetesi, eğitim maliyeti olmadan uygulanan
+Nihai modelin çıkarım reçetesi, eğitim maliyeti olmadan uygulanan
 deterministik bir test zamanı veri artırmadır (TTA). Her görüntü için dört
 deterministik görünüm üretilir --- (i) \emph{base}: Resize(256)$\rightarrow$
 CenterCrop(224); (ii) \emph{hflip}: base + yatay çevirme; (iii) \emph{scale}:
@@ -146,12 +144,13 @@ sınırını aşmadığından sızıntıya yol açmaz.
 
 \subsection{Sızıntısız Seed Topluluğu (Ensemble)}
 \label{subsec:ensemble}
-Resmi 5-katlı protokolde yalnızca sızıntısız topluluk yöntemine izin verilir
-(karar D-07). Seed topluluğu, aynı yapılandırmanın farklı tohumlarla (seed)
+Resmi 5-katlı protokolde yalnızca sızıntısız topluluk yöntemine izin verilir.
+Seed topluluğu, aynı yapılandırmanın farklı tohumlarla (seed)
 eğitilmiş modellerinin softmax olasılıklarını \emph{her katın kendi ayrık test
 kümesi içinde} ortalayıp ardından 5 katı havuzlayarak her örneğin tam olarak bir
 kez görünmesini sağlar ($n = 10{.}662$). Olasılıklar her zaman softmax düzeyinde
-ortalanır; argmax oylaması kullanılmaz. \textbf{Katlar arası saf model ortalaması
-yasaktır}: 5 kat modelini tüm veri kümesi üzerinde ortalamak sızıntıya yol açar,
+ortalanır; argmax oylaması kullanılmaz. Katlar arası saf model ortalaması bu
+çalışmada kullanılmamıştır: 5 kat modelini tüm veri kümesi üzerinde ortalamak
+sızıntıya yol açar,
 çünkü her örnek katların 4'ünün eğitim kümesinde yer almıştır. Bu nedenle
 modeller hiçbir zaman katlar arasında topluluk haline getirilmez.

@@ -25,12 +25,12 @@ Birincil değerlendirme protokolü resmi HiperKvasir 5-katlı (5-fold) bölmesid
 türetilir: $k$ katı için resmi kat $k$ test, kat $(k+1)\bmod 5$ doğrulama
 (validation) ve kalan katlar eğitim olarak kullanılır. Bölme manifestleri
 kaydedilir ve eğitim/doğrulama/test bölümleri arasında veri sızıntısına karşı
-denetlenir (PLD-12). Bu protokol, yapılandırmalar arasındaki tüm iç
+denetlenir. Bu protokol, yapılandırmalar arasındaki tüm iç
 karşılaştırmaların aynı bölme mantığı üzerinde yapılmasını sağlar.
 
 \subsection{Metrikler}
 \label{subsec:metrics}
-Ana başarı ölçütü makro-F1'dir (PLD-11). Buna ek olarak doğruluk (accuracy),
+Ana başarı ölçütü makro-F1'dir. Buna ek olarak doğruluk (accuracy),
 makro kesinlik (macro precision) ve makro duyarlılık (macro recall) destekleyici
 ölçütler olarak raporlanır. Sınıf dengesizliğinin etkisini görünür kılmak için
 mikro-F1 (tek etiketli çok sınıflı durumda doğruluğa eşittir), örnek-ağırlıklı
@@ -43,7 +43,8 @@ dengesizliğin doğrudan kanıtıdır. Tüm metrikler sıfır-bölme durumların
 güvenli biçimde hesaplanır.
 
 Sınıf düzeyindeki davranışı incelemek için en iyi model için sınıf başına
-kesinlik/duyarlılık/F1 ve destek (support) değerleri (Tablo 3) ile bir hata
+kesinlik/duyarlılık/F1 ve destek (support) değerleri (Tablo~\ref{tab:perclass})
+ile bir hata
 matrisi (confusion matrix) sunulur; sayısal değerler ve referanslar
 Bölüm~\ref{sec:results}'te verilir.
 Değerlendirmenin güvenilirliğini güçlendirmek için seçilmiş yapılandırmalarda
@@ -56,7 +57,7 @@ Bölüm~\ref{sec:results}'te verilir.
 
 \subsection{Hiperparametreler}
 \label{subsec:hyperparams}
-İnce ayar deneyleri \texttt{finetune\_wide.yaml} yapılandırmasını kullanır.
+İnce ayar deneyleri ortak bir ince-ayar yapılandırması kullanır.
 Eniyileyici AdamW'dir~\cite{loshchilov2019adamw} (başlık öğrenme oranı
 $1\times10^{-3}$, omurga öğrenme oranı $1\times10^{-4}$, ağırlık sönümü
 $1\times10^{-4}$); fine-tuning sırasında katman bazlı azalan öğrenme oranı
@@ -71,27 +72,19 @@ makro-F1'i üzerinde 8 epoch sabırlı erken durdurma uygulanır ve toplu iş bo
 alınır. Frozen deneyler aynı temel kurulumu kullanır; ancak omurga ağ blokları
 çözülmez ve önbelleğe alınmış özellikler üzerinde yalnızca başlık eğitilir.
 
-Focal loss ablasyonu (Bölüm~\ref{subsec:focal}),
-\texttt{finetune\_wide\_focal.yaml} yapılandırmasını kullanır; bu yapılandırma
-\texttt{finetune\_wide.yaml}'dan yalnızca kayıp bloğunda ayrılır (etiket
-yumuşatmalı CE yerine $\gamma{=}2{,}0$ focal; etiket yumuşatma kaldırılmıştır).
-Donmuş final modelin değerlendirilmesinde, Bölüm~\ref{subsec:tta}'da tanımlanan
-dört-görünümlü deterministik TTA çıkarımı kullanılır.
+Focal loss ablasyonu (Bölüm~\ref{subsec:focal}) temel yapılandırmadan yalnızca
+kayıp bloğunda ayrılır (etiket yumuşatmalı CE yerine $\gamma{=}2{,}0$ focal;
+etiket yumuşatma kaldırılmıştır). Nihai modelin değerlendirilmesinde,
+Bölüm~\ref{subsec:tta}'da tanımlanan dört-görünümlü deterministik TTA çıkarımı
+kullanılır.
 
 \subsection{Yeniden Üretilebilirlik ve Ortam}
 \label{subsec:repro}
-Belirlenebilirlik (determinism) yapılandırma ile kontrol edilir (PLD-18);
-raporlanan koşular için sabit tohum (seed 42) ve deterministik mod kullanılmıştır.
-Yerel ortam doğrulaması belgelenmiştir: Python 3.11.9, PyTorch 2.12.0+cu132,
-torchvision 0.27.0+cu132 ve NVIDIA GeForce RTX 5080 dizüstü GPU'su (kaynak:
-\texttt{docs/environment.md}). Raporlanan 5-katlı CV ve final model bu yerel RTX
-5080 ortamında üretilmiştir. Buna ek olarak, daha hızlı keşif için isteğe bağlı
-bir Colab A100 yolu da kullanılabilir (D-08, \texttt{finetune\_wide\_a100.yaml};
-toplu iş ve öğrenme oranları ölçeklenir, diğer bilimsel ayarlar değişmez). A100
-yolu, yalnızca yönlendirme (orchestration) içeren bir çalıştırıcı ve sıkı bir
-köken (provenance) kapısı altında işletilir (D-09: git SHA,
-\texttt{resolved\_config.yaml}, veri kümesi SHA256, manifest kimliği); köken
-kaydı eksik koşular yalnızca geçici/hata-ayıklama amaçlıdır ve manşet (headline)
-sonuç sağlayamaz. Sürdürülen tüm koşular için yapılandırma, metrikler ve epoch
-günlükleri koşu dizinlerine kaydedilir; böylece rapordaki her sayı bir
-\texttt{metrics.json} dosyasına kadar izlenebilir.
+Belirlenebilirlik (determinism) için raporlanan koşularda sabit tohum (seed 42)
+ve deterministik mod kullanılmıştır. Yerel ortam şudur: Python 3.11.9, PyTorch
+2.12.0+cu132, torchvision 0.27.0+cu132 ve NVIDIA GeForce RTX 5080 dizüstü GPU'su.
+Raporlanan 5-katlı çapraz doğrulama ve nihai model bu yerel ortamda üretilmiştir;
+daha hızlı keşif için isteğe bağlı bir Colab A100 yolu da aynı bilimsel ayarlarla
+kullanılabilmektedir. Tüm koşular için yapılandırma, metrik çıktıları ve epoch
+günlükleri proje dosyaları içinde saklanır; böylece rapordaki her sayı
+izlenebilir.
