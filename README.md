@@ -371,56 +371,6 @@ Latest local verification during README refresh:
 ```text
 176 passed
 ```
-
-## Submission Packaging Notes
-
-For the course submission, include:
-
-```text
-README.md
-pyproject.toml
-uv.lock
-.python-version
-env/
-src/
-scripts/
-configs/
-tests/
-docs/
-references/
-reports/final/
-results/tables/
-results/figures/
-results/runs/**/metrics*.json
-results/runs/**/config.yaml
-results/runs/**/epoch_log.jsonl
-results/runs/**/predictions*.npz
-results/runs/**/confusion_matrix.png
-final_report.pdf
-youtube_link.txt
-```
-
-Do not include:
-
-```text
-.git/
-.venv/
-__pycache__/
-.pytest_cache/
-data/raw/
-data/processed/ large generated files
-results/feature_cache/
-results/runs/**/*.pt
-results/runs/**/best.pt
-results/runs/**/last.pt
-results/runs/**/ema.pt
-references/**/original.pdf
-references/**/assets/
-```
-
-The assignment requires a compressed archive containing the report PDF, source
-code, README, and YouTube video link. The video link is mandatory for grading.
-
 ## Design Integrity Rules
 
 The following rules are intentional and should not be changed silently:
