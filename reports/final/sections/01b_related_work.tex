@@ -1,0 +1,45 @@
+% =====================================================================
+% 1b. İLGİLİ ÇALIŞMALAR (Related Work)
+% Qualitative survey of prior work; describes WHAT others did. The numeric
+% comparison to our results stays in §4.9 (subsec:contextual) and is only
+% cross-referenced here. Cite ONLY paper.md-backed bib entries. No numbers,
+% no SOTA claims.
+% =====================================================================
+\section{İlgili Çalışmalar}
+\label{sec:related}
+
+Gastrointestinal endoskopi görüntülerinin sınıflandırılması, HiperKvasir veri
+kümesinin~\cite{borgli2020hyperkvasir} yayımlanmasından bu yana çeşitli
+çalışmalarda ele alınmıştır. Borgli ve ark.~\cite{borgli2020hyperkvasir} veri
+kümesini tanıtmış ve resmi bölmeler üzerinde önceden eğitilmiş evrişimsel ağlarla
+(ResNet, DenseNet ve bunların topluluğu) baseline sonuçları raporlamıştır.
+Ramamurthy ve ark.~\cite{ramamurthy2022effimix} (Effimix), EfficientNet tabanlı
+çok-özellikli bir füzyon yaklaşımı önermiş; ancak değerlendirmeyi veri artırma ile
+dengelenmiş ve resmi olmayan bir bölme üzerinde yapmıştır. GastroViT
+\cite{gastrovit2025} görüntü dönüştürücü (Vision Transformer) tabanlı bir topluluk
+kullanmış; Ahmed ve ark.~\cite{ahmed2023hybrid} ise derin özellikler ile klasik
+sınıflandırıcıları birleştiren hibrit bir füzyon şeması sunmuştur. Bu çalışmalar
+farklı veri bölme ve ön işleme protokolleri kullandığından sonuçlarımızla doğrudan
+baş-başa karşılaştırılamaz; bu nedenle sayısal kıyaslama yalnızca
+Bölüm~\ref{subsec:contextual}'da, protokol farkları açıkça belirtilerek bağlamsal
+biçimde ele alınmıştır.
+
+Özellik füzyonu için literatürde farklı stratejiler bulunur. En yalın yaklaşım,
+dal özelliklerini birleştirme (concatenation) ile uç uca eklemektir; öğrenilebilir
+ağırlıklı füzyon ise dalların katkısını eğitim sırasında ayarlanabilir kılar. Daha
+gelişmiş bir alternatif, her örnek için kapı (gate) ağırlıkları hesaplayan kapılı
+çok-kipli birimdir (Gated Multimodal Unit, GMU)~\cite{arevalo2017gmu}. Bu
+çalışmada, zorunlu iki yöntem olan birleştirme ve ağırlıklı füzyonun yanı sıra GMU
+varyantı da uygulanmış ve aynı protokol altında karşılaştırılmıştır.
+
+Sınıf dengesizliği, dengesiz görsel sınıflandırma görevlerinde yaygın bir zorluktur
+ve çoğunlukla kayıp düzeyinde ele alınır. Lin ve ark.'nın focal
+loss~\cite{lin2017focal} yaklaşımı, kolay örneklerin katkısını azaltarak eğitimi
+zor örneklere yöneltir. Bu çalışmada focal loss, en iyi yapılandırma üzerinde
+tek-değişkenli bir ablasyon olarak denenmiş ve sonucu Bölüm~\ref{sec:results}'te
+verilmiştir.
+
+Bu çalışma, anılan yaklaşımlardan farklı olarak, üç önceden eğitilmiş omurganın
+(ResNet50, MobileNetV2, EfficientNetB0) ağırlıklı füzyonu ile MLP sınıflandırmasını
+resmi 5-katlı protokol altında ve önyükleme güven aralıklarıyla değerlendiren
+kontrollü bir karşılaştırma sunar.
