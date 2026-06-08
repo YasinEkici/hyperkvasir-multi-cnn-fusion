@@ -1,0 +1,14 @@
+{
+  "experiment": "11_triple_weighted_finetune_wide_official",
+  "fold": 2,
+  "tta": false,
+  "views": [
+    "base"
+  ],
+  "n_test": 2122,
+  "accuracy": 0.8746465598491989,
+  "macro_f1": 0.5829191035386393,
+  "macro_precision": 0.5907455426803303,
+  "macro_recall": 0.5928937800503625,
+  "zero_support_classes": []
+}

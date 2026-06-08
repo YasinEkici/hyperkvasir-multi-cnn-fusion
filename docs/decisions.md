@@ -64,3 +64,21 @@ Project decisions are locked in `project_structure.md` and `project_plan.md`.
   `finetune_wide.yaml` only in the loss block — all other hyperparameters
   are identical for a single-variable ablation.
 - Week 3 CE runs (exp 11) are preserved unchanged for comparison.
+
+## 2026-06-08 - D-07: Leakage-free Ensembling Policy
+
+- Only **leakage-free** ensembling is permitted on the official 5-fold protocol.
+- **Seed ensemble (allowed):** train M seeds of the same config; average their
+  per-image **softmax within each fold's own held-out test set**, then pool the
+  5 folds so each sample appears exactly once (n=10,662). Implemented in
+  `scripts/ensemble_seeds.py`; new seeds use a `--seed` override and write to
+  `{exp}_seed{S}[_fold_{k}]` (canonical seed-42 runs untouched).
+- **TTA (allowed):** per-model, per-image, deterministic test-time views
+  (see Step 4) — averaged softmax, no leakage.
+- **Naive cross-fold model averaging is FORBIDDEN:** averaging the 5 fold models
+  over the full dataset leaks, because each sample was in 4 of the 5 folds'
+  training sets. Never ensemble models across folds.
+- Always average **softmax probabilities**, never argmax votes.
+- Step 5 finding: a 2-seed ensemble reduced variance (narrower CI; best
+  accuracy/weighted-F1/MCC) but did not raise macro-F1 (the second seed was the
+  weaker draw). By macro-F1 (PLD-11), exp 11 + TTA remains the best model.

@@ -363,6 +363,68 @@ point estimate lies inside the other's interval).
   candidate "best model" to freeze in Step 7, while honestly noting the gain is
   within CI overlap (not a statistically conclusive improvement over base).
 
+### Step 5 — Leakage-free seed ensemble on the champion (exp 11)
+*Completed: 2026-06-08*
+
+Train a second seed (123) of the unchanged champion config (`finetune_wide.yaml`,
+single-variable: only the seed changes) across all 5 folds, then average the
+per-image softmax of the two seeds **within each fold's held-out test set** and
+pool (D-07: leakage-free; no cross-fold model averaging). Seed 42 was trained in
+Week 3 on the RTX 5080; seed 123 on the same stack for a clean comparison.
+Implemented via a `--seed` override (`train.py`/`run_cv.py`) + `scripts/ensemble_seeds.py`.
+
+Per-seed CV (test macro-F1): seed 42 = 0.5892 ± 0.0102, seed 123 = 0.5779 ± 0.005
+(seed 123 is the weaker draw). Ensembled per-fold macro-F1 (base): 0.5882, 0.6070,
+0.5757, 0.6084, 0.5865. No NaN, no zero-support.
+
+### Ensemble vs base vs TTA — head-to-head (exp 11, pooled n=10,662)
+
+| Variant | Macro-F1 | 95% CI (width) | Acc | Weighted-F1 | MCC |
+|---|---:|---|---:|---:|---:|
+| base (seed 42) | 0.6000 | [0.5814, 0.6206] (0.039) | 0.8706 | 0.8716 | 0.8599 |
+| **TTA (seed 42)** | **0.6075** | [0.5860, 0.6296] (0.044) | 0.8765 | 0.8761 | 0.8662 |
+| ensemble (42+123) | 0.5971 | [0.5850, 0.6097] (0.025) | 0.8774 | 0.8780 | 0.8672 |
+| ensemble + TTA | 0.6005 | [0.5883, 0.6135] (0.025) | **0.8810** | **0.8797** | **0.8710** |
+
+Tables: `results/tables/ci_11_*_ensemble[_tta].json`, `extra_metrics_11_*_ensemble[_tta].json`.
+Ensemble predictions in canonical `results/runs/11_*/predictions_ensemble[_tta].npz`.
+
+### Verdict — seed ensemble
+
+**The leakage-free 2-seed ensemble did NOT raise the headline macro-F1:**
+ensemble+TTA pooled macro-F1 = 0.6005 < TTA-only 0.6075. The second seed (123,
+CV 0.5779) under-performed seed 42 (0.5892), and averaging it in pulled the
+rare-class (macro) average down.
+
+- **However, the ensemble's variance-reduction benefit did materialise:** the CI
+  narrowed markedly (width 0.025 vs 0.044 for single-seed TTA), and ensemble+TTA
+  is the **best variant on accuracy (0.8810), weighted-F1 (0.8797) and MCC
+  (0.8710)** — these majority-class-weighted metrics benefit from averaging even
+  when macro-F1 does not.
+- All four variants' CIs overlap → no statistically significant difference.
+- With M=2 and one weak seed, a 2-seed average is sensitive to seed quality; it
+  can dip below the best single seed on macro-F1 (the rare-class-sensitive metric).
+- **Recommendation:** by the locked headline metric (macro-F1, PLD-11),
+  **exp 11 + TTA (single seed 42, 0.6075) remains the best model** and the
+  candidate to freeze in Step 7. The seed ensemble is reported honestly as a
+  robustness technique that stabilised variance and topped the aggregate metrics
+  but did not improve macro-F1 at M=2.
+
+### Week 3.5 summary — best vs Week 3 best
+
+| Technique | macro-F1 (pooled) | vs Week 3 best (0.6000) |
+|---|---:|---|
+| Week 3 best — exp 11 CE (base) | 0.6000 | — (champion) |
+| + Focal (exp 16) | 0.5914 | worse (within CI) |
+| **+ TTA** | **0.6075** | **+0.0075 (within CI) — best macro-F1** |
+| + seed ensemble (+TTA) | 0.6005 | +0.0005 (within CI); best acc/weighted/MCC |
+
+**Overall Week 3.5 finding:** no technique produced a statistically significant
+(CI-level) macro-F1 gain over the Week 3 CE champion — the architecture is at its
+ceiling on the official 5-fold protocol. TTA gives the best macro-F1 point
+estimate (0.6075) at zero training cost and is adopted as the inference protocol;
+the recommended final model is **exp 11 (triple weighted CE) + TTA**.
+
 ---
 
 ## Week 4 — Analysis and Report

@@ -2,6 +2,32 @@
 
 Record successful runs and environment notes here.
 
+## 2026-06-08 - Week 3.5 Step 5 Leakage-free Seed Ensemble — COMPLETE
+
+- Added `--seed` override to `train.py` + `run_cv.py` (feeds `seed_all`, recorded
+  in saved config; seeds != 42 write to `{exp}_seed{S}[_fold_{k}]` so canonical
+  seed-42 runs are not overwritten). Added `scripts/ensemble_seeds.py` (per-fold
+  softmax average across seeds → canonical `predictions_ensemble[_tta].npz`) and
+  `tests/test_ensemble.py` (8 tests). 176 tests pass.
+- USER trained seed 123 of exp 11 (unchanged `finetune_wide.yaml`, single-variable)
+  on local RTX 5080, all 5 folds. Same stack as the seed-42 champion (Week 3).
+  Per-fold test macro-F1: 0.5779 / 0.5720 / 0.5749 / 0.5852 / 0.5793 (CV 0.5779 ±
+  0.005). No NaN, no zero-support. seed 123 is the weaker draw vs seed 42 (0.5892).
+- ASSISTANT (inference only, RTX 5080): generated per-seed softmax (base + TTA) via
+  evaluate.py; ensembled per fold (leakage-free) + pooled CI / extra metrics.
+- Results (pooled n=10,662):
+  - ensemble (base): macro-F1 0.5971 [0.5850, 0.6097], acc 0.8774, wF1 0.8780, MCC 0.8672
+  - ensemble + TTA : macro-F1 0.6005 [0.5883, 0.6135], acc 0.8810, wF1 0.8797, MCC 0.8710
+  - vs base 0.6000 [0.5814, 0.6206] and TTA 0.6075 [0.5860, 0.6296].
+- **Verdict:** ensemble did NOT raise headline macro-F1 (0.6005 < TTA 0.6075) —
+  the weaker seed 123 dragged the rare-class average. But it delivered variance
+  reduction: CI width 0.025 vs 0.044, and best acc/weighted-F1/MCC of any variant.
+  All CIs overlap → not significant. By macro-F1 (PLD-11), **exp 11 + TTA remains
+  the best model**; ensemble reported honestly as a robustness technique with no
+  macro-F1 gain at M=2.
+- Added `docs/decisions.md` D-07 (leakage-free ensembling policy). Updated
+  `docs/results_progress.md` (Step 5 section + Week 3.5 summary table).
+
 ## 2026-06-07 - Week 3.5 Step 4 Test-Time Augmentation (TTA) — COMPLETE
 
 - Implemented `scripts/evaluate.py` (was a scaffold): TTA inference path that
