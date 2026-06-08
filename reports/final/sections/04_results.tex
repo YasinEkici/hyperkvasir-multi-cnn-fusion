@@ -18,7 +18,7 @@
 
 Sonuçlar dört eksende sunulur: (i) fold-0 üzerinde tek/ikili/üçlü ablasyon,
 (ii) seçilmiş yapılandırmalar için 5-katlı çapraz doğrulama (CV), (iii) en iyi
-yapılandırma üzerinde Week 3.5 toplamsal ablasyonlarının dürüst baş-başa
+yapılandırma üzerinde toplamsal ablasyonların dürüst baş-başa
 karşılaştırması ve (iv) donmuş final modelin sınıf-bazlı çözümlemesi. Ana ölçüt
 makro-F1, destekleyici ölçüt ise doğruluktur (accuracy).
 
@@ -142,7 +142,7 @@ ID & Yapılandırma & Acc / micro-F1 & Makro-F1 & Weighted-F1 & MCC \\
 \end{tabular}
 \end{table}
 
-\subsection{Week 3.5 Toplamsal Ablasyonlar: Dürüst Baş-Başa Karşılaştırma}
+\subsection{Toplamsal Ablasyonlar: Dürüst Baş-Başa Karşılaştırma}
 \label{subsec:week35}
 En iyi yapılandırma (exp 11) üzerinde dört toplamsal teknik
 değerlendirilmiştir: focal loss, TTA, sızıntısız seed topluluğu ve
@@ -161,7 +161,7 @@ nokta tahminini veren ve aggregate değerleri hiçbir zaman düşürmeyen
 
 \begin{table}[H]
 \centering
-\caption{En iyi yapılandırma (exp 11) üzerinde Week 3.5 ablasyonları, havuzlanmış
+\caption{En iyi yapılandırma (exp 11) üzerinde toplamsal ablasyonlar, havuzlanmış
 makro-F1 ($n=10{.}662$). Tüm aralıklar CE şampiyonunun aralığıyla örtüşür.
 Kaynak: \texttt{ci\_11\_*\{,\_tta,\_ensemble,\_ensemble\_tta\}.json},
 \texttt{ci\_16\_*.json}.}
