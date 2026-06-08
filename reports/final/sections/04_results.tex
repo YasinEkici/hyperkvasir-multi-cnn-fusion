@@ -117,11 +117,14 @@ ID & Yapılandırma & Füzyon & M-F1 (nokta) & \%95 GA \\
 
 \subsection{Destekleyici Metrikler}
 \label{subsec:support-metrics}
-Tablo~\ref{tab:extra} havuzlanmış doğruluk/mikro-F1, örnek-ağırlıklı F1 ve
-Matthews korelasyon katsayısını (MCC) verir. Exp 11 her destekleyici ölçütte de
-en iyidir. Makro-F1 ($\approx 0{,}60$) ile örnek-ağırlıklı F1 ($\approx 0{,}87$)
-arasındaki yaklaşık $0{,}27$'lik fark, sınıf dengesizliğinin doğrudan kanıtıdır:
-aggregate ölçütler nadir sınıflardaki başarısızlığı maskeler.
+Tablo~\ref{tab:extra} havuzlanmış doğruluk/mikro-F1, örnek-ağırlıklı F1, Matthews
+korelasyon katsayısı (MCC) ve Cohen Kappa değerlerini verir. Exp 11 her
+destekleyici ölçütte de en iyidir. Makro-F1 ($\approx 0{,}60$) ile örnek-ağırlıklı
+F1 ($\approx 0{,}87$) arasındaki yaklaşık $0{,}27$'lik fark, sınıf dengesizliğinin
+doğrudan kanıtıdır: aggregate ölçütler nadir sınıflardaki başarısızlığı maskeler.
+Donmuş final model (exp 11 + TTA) için bu değerler biraz daha yüksektir: Kappa
+$0{,}8661$ ve makro tek-vs-rest ROC-AUC $0{,}967$ (bu iki ölçüt literatürle
+karşılaştırmada Bölüm~\ref{subsec:contextual}'da kullanılır).
 
 \begin{table}[H]
 \centering
@@ -129,15 +132,15 @@ aggregate ölçütler nadir sınıflardaki başarısızlığı maskeler.
 çok sınıflı durumda doğruluğa eşittir. Kaynak:
 \texttt{results/tables/extra\_metrics\_*.json}.}
 \label{tab:extra}
-\begin{tabular}{ll cccc}
+\begin{tabular}{ll ccccc}
 \toprule
-ID & Yapılandırma & Acc / micro-F1 & Makro-F1 & Weighted-F1 & MCC \\
+ID & Yapılandırma & Acc / micro-F1 & Makro-F1 & Weighted-F1 & MCC & Kappa \\
 \midrule
-11 & R+M+E weighted & \textbf{0.8706} & \textbf{0.6000} & \textbf{0.8716} & \textbf{0.8599} \\
-10 & R+M+E concat   & 0.8579 & 0.5708 & 0.8613 & 0.8464 \\
-14 & M+E concat     & 0.8482 & 0.5759 & 0.8522 & 0.8359 \\
-13 & EfficientNetB0 & 0.8484 & 0.5730 & 0.8536 & 0.8367 \\
-15 & R+M+E GMU      & 0.8481 & 0.5690 & 0.8507 & 0.8358 \\
+11 & R+M+E weighted & \textbf{0.8706} & \textbf{0.6000} & \textbf{0.8716} & \textbf{0.8599} & \textbf{0.8597} \\
+10 & R+M+E concat   & 0.8579 & 0.5708 & 0.8613 & 0.8464 & 0.8461 \\
+14 & M+E concat     & 0.8482 & 0.5759 & 0.8522 & 0.8359 & 0.8356 \\
+13 & EfficientNetB0 & 0.8484 & 0.5730 & 0.8536 & 0.8367 & 0.8360 \\
+15 & R+M+E GMU      & 0.8481 & 0.5690 & 0.8507 & 0.8358 & 0.8355 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -267,52 +270,118 @@ ID & Yapılandırma & Rejim & Epoch & Yaklaşık süre \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{comparison_bar_chart.png}
-\caption{Deneyler arası doğruluk ve makro-F1 karşılaştırması.
-Kaynak: \texttt{results/figures/comparison\_bar\_chart.png}.}
+\includegraphics[width=\linewidth]{comparison_bar_chart.pdf}
+\caption{Seçilmiş beş 5-katlı yapılandırma için havuzlanmış ($n{=}10{.}662$)
+doğruluk ve makro-F1 karşılaştırması.}
 \label{fig:bar}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{training_curves.png}
-\caption{Doğrulama doğruluğu ve makro-F1'in epoch boyunca değişimi.
-Kaynak: \texttt{results/figures/training\_curves.png}.}
+\includegraphics[width=\linewidth]{training_curves.pdf}
+\caption{Doğrulama doğruluğu ve makro-F1'in epoch boyunca değişimi (seçilmiş beş
+5-katlı yapılandırma, fold 0).}
 \label{fig:curves}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{confusion_matrix_frozen_tta.png}
-\caption{Donmuş final model (exp 11 + TTA) için $23\times23$ hata matrisi,
-havuzlanmış 5-katlı test. Kaynak:
-\texttt{results/figures/confusion\_matrix\_frozen\_tta.png}.}
+\includegraphics[width=0.8\linewidth]{confusion_matrix_frozen_tta.pdf}
+\caption{Donmuş final model (exp 11 + TTA) için $23\times23$ satır-normalize hata
+matrisi, havuzlanmış 5-katlı test ($n{=}10{.}662$). Eksenler sınıf indeksleridir:
+{\footnotesize 0=barretts, 1=bbps-0-1, 2=bbps-2-3, 3=dyed-lifted-polyps,
+4=dyed-resection-margins, 5=hemorroids, 6=ileum, 7=impacted-stool, 8=normal-cecum,
+9=normal-pylorus, 10=normal-z-line, 11=oesophagitis-a, 12=oesophagitis-b-d,
+13=polyp, 14=retroflex-rectum, 15=retroflex-stomach, 16=short-segment-barretts,
+17=ulcerative-colitis-grade-0-1, 18=ulcerative-colitis-grade-1,
+19=ulcerative-colitis-grade-1-2, 20=ulcerative-colitis-grade-2,
+21=ulcerative-colitis-grade-2-3, 22=ulcerative-colitis-grade-3.}}
 \label{fig:cm}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{per_class_f1_frozen_tta.png}
-\caption{Donmuş final model için sınıf-bazlı F1 (destek sırasına göre).
-Nadir sınıflardaki çöküş açıkça görülür. Kaynak:
-\texttt{results/figures/per\_class\_f1\_frozen\_tta.png}.}
+\includegraphics[width=\linewidth]{per_class_f1_frozen_tta.pdf}
+\caption{Donmuş final model için sınıf-bazlı F1 (azalan sırada; kırmızı sütunlar:
+F1 < 0.3; kırmızı kesikli çizgi: F1 = 0.3 eşiği). Nadir sınıflardaki çöküş açıkça
+görülür.}
 \label{fig:perclassf1}
 \end{figure}
 
-\subsection{Literatür ile Bağlamsal Karşılaştırma}
+\subsection{Literatür ile Karşılaştırma}
 \label{subsec:contextual}
-Aşağıdaki dış sonuçlar yalnızca \emph{bağlamsaldır}; protokol farkları nedeniyle
-baş-başa karşılaştırma tablosuna dahil edilmez. Tek protokol-uyumlu çapa, resmi
-bölme tabanlı sonuçlardır: Borgli ve ark.~\cite{borgli2020hyperkvasir} resmi
-bölmede makro-F1 $\approx 0{,}62$ ile mikro-F1 $\approx 0{,}90$ raporlar; bizim
-$\approx 0{,}60$ makro-F1 değerimiz aynı bantta yer alır ve aradaki
-makro$\leftrightarrow$mikro farkı bizim sonuçlarımızda da gözlenir. Buna karşılık
-Effimix~\cite{ramamurthy2022effimix} $\approx \%98$ doğruluk bildirir; ancak bu
-sonuç veri artırma ile sınıf sayısının dengelendiği ve resmi olmayan bir bölme
-kullanan bir kuruluma dayanır (muhtemelen iyimser yanlılık). GastroViT~%
-\cite{gastrovit2025} 23-sınıf için $\approx \%92$ doğruluk ve $\approx \%64$
-makro-F1 bildirir; yüksek doğruluğun yüksek makro-F1 anlamına gelmediğini
-gösterir. GastroViT'in 16-sınıflı sonuçları farklı bir görev olduğundan bizim
-23-sınıflı sonuçlarımızla \emph{karıştırılmaz}. Özetle, dış sayılar farklı
-protokoller nedeniyle doğrudan üstünlük iddiası için kullanılamaz; yalnızca
-resmi-bölme bandı anlamlı bir konumlandırma sağlar.
+Karşılaştırmayı iki düzeyde sunuyoruz: (i) bizimle \emph{aynı resmi-bölme
+protokolünü} kullanan ve dolayısıyla yakın-doğrudan kıyaslanabilen Borgli ve
+ark.\ baseline'ları; (ii) farklı protokol kullanan ve yalnızca \emph{bağlamsal}
+olarak anılabilen diğer çalışmalar. Hiçbir durumda doğrudan üstünlük ya da
+güncel-en-iyi (SOTA) iddiasında bulunulmamaktadır.
+
+\paragraph{Aynı protokol (resmi bölme).}
+Tablo~\ref{tab:cmp-borgli}, aynı resmi-bölme ailesinde raporlanan Borgli ve
+ark.~\cite{borgli2020hyperkvasir} baseline'larıyla donmuş final modelimizi
+karşılaştırır. Çok daha \emph{hafif} üçlü füzyonumuz (ResNet50+MobileNetV2+
+EfficientNetB0, $\approx$14M omurga parametresi), Borgli'nin \emph{ağır}
+ResNet-152+DenseNet-161+MLP füzyonuyla makro-F1'de \textbf{başa baştır}
+($0{,}6075$ vs $0{,}605$) ve en iyi tekil omurgaları DenseNet-161'e ($0{,}619$)
+yaklaşır; ancak genel doğruluk/mikro-F1 ($0{,}877$ vs $\approx 0{,}907$) ve MCC
+($0{,}866$ vs $\approx 0{,}90$) açısından yaklaşık 3--4 puan geridedir. Yani
+dengesizliğe duyarlı makro-F1'de ağır modellerle eşitleniyoruz; genel doğrulukta
+ise --- daha düşük omurga kapasitesiyle tutarlı biçimde --- onların altında
+kalıyoruz. (Borgli iki resmi split ortalaması verir, biz resmi 5-kat kullanırız;
+ikisi de resmi-bölme tabanlı, küçük bir fark.)
+
+\begin{table}[H]
+\centering
+\caption{Aynı resmi-bölme protokolünde karşılaştırma. Borgli değerleri
+\cite{borgli2020hyperkvasir} Tablo 3 (iki split ortalaması); bizim değerlerimiz
+resmi 5-kat havuzlanmıştır ($n=10{.}662$).}
+\label{tab:cmp-borgli}
+\begin{tabular}{ll ccc}
+\toprule
+Yöntem & Omurga(lar) & Makro-F1 & micro-F1/Acc & MCC \\
+\midrule
+Borgli & ResNet-50 & 0.530 & 0.839 & 0.826 \\
+Borgli & ResNet-152 & 0.606 & 0.906 & 0.898 \\
+Borgli & DenseNet-161 & 0.619 & 0.907 & 0.899 \\
+Borgli & RN152+DN161+MLP & 0.605 & 0.909 & 0.902 \\
+\textbf{Bizim} & \textbf{R+M+E + TTA} & \textbf{0.6075} & 0.8765 & 0.8662 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Bağlamsal (farklı protokol --- baş-başa değil).}
+Tablo~\ref{tab:cmp-context} farklı bölme/ön işleme kullanan çalışmaları listeler;
+protokol farkı nedeniyle baş-başa kıyaslanamazlar. Effimix~\cite{ramamurthy2022effimix}
+$\approx \%98$ doğruluk ($0{,}97$ makro-F1) bildirir; ancak bu sonuç veriyi
+$\sim$23.000'e augment edip sınıfları dengeleyen ve resmi-olmayan bir bölme
+kullanan bir kuruluma dayanır (iyimser yanlılık). GastroViT~\cite{gastrovit2025}
+23-sınıf için $0{,}92$ doğruluk / $0{,}64$ makro-F1 (tek split) verir; 16-sınıflı
+sonuçları farklı bir görev olduğundan bizim 23-sınıflı sonuçlarımızla
+\emph{karıştırılmaz}. Dürüst, resmi-protokol bandında 23-sınıf makro-F1
+$\approx 0{,}53$--$0{,}62$ aralığındadır ve bizim $0{,}61$ değerimiz bu banttadır.
+
+\begin{table}[H]
+\centering
+\caption{Bağlamsal karşılaştırma (farklı protokol --- baş-başa DEĞİL).
+``Effimix T5'' = ilgili değerler Effimix'in karşılaştırma tablosundan (Tablo 5)
+aktarılmıştır.}
+\label{tab:cmp-context}
+\begin{tabular}{lll cc}
+\toprule
+Çalışma & Yöntem & Protokol & Makro-F1 & Acc \\
+\midrule
+Effimix~\cite{ramamurthy2022effimix} & EffNetB0+Effimix & augment+dengeleme, resmi-olmayan & 0.97 & 0.98 \\
+GastroViT~\cite{gastrovit2025} & MobileViT topluluğu & 64:16:20 tek split & 0.64 & 0.92 \\
+He ve ark.\ (Effimix T5) & ResNet-152+MobileNetV3 & belirsiz & 0.66 & -- \\
+Galdran (CNN--BiT, Effimix T5) & BiT & belirsiz & 0.92 & -- \\
+Galdran (MNV2+ResNeXt, Effimix T5) & MNV2+ResNeXt & belirsiz & 0.64 & 0.65 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{AUC nüansı.}
+Eşik-bağımsız makro tek-vs-rest ROC-AUC değerimiz ($0{,}967$), Effimix'in
+bildirdiği AUC'ye ($0{,}977$) yakındır; oysa makro-F1'imiz ($0{,}61$) onunkinin
+($0{,}97$) çok altındadır. Bu, büyük F1 farkının sıralama kalitesinden değil,
+çalışma noktası / sınıf dengesi / protokol farkından kaynaklandığını gösterir
+(bu AUC kıyası da çapraz-protokoldür ve yalnızca açıklayıcıdır).

@@ -13,15 +13,17 @@
 birleşik temsilin bir MLP sınıflandırıcı ile sınıflandırılması. Bu bölümde her
 bileşen ve transfer öğrenme kurulumu açıklanmaktadır.
 
-% Mimari diyagramı henüz çizilmedi (elle hazırlanacak). Çizildiğinde
-% reports/final/figures/architecture.pdf olarak eklenip aşağıdaki figür
-% ortamı yorumdan çıkarılacaktır.
-\TODO{Mimari diyagramı (R/M/E omurga $\rightarrow$ 512 projeksiyon $\rightarrow$
-füzyon $\rightarrow$ MLP) Şekil olarak eklenecek --- elle çizilecek.}
-% \begin{figure}[H]\centering
-%   \includegraphics[width=0.9\linewidth]{architecture.pdf}
-%   \caption{Çoklu-CNN özellik füzyon mimarisi.}\label{fig:arch}
-% \end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{architecture.pdf}
+\caption{Çoklu-CNN özellik füzyon mimarisi: üç önceden eğitilmiş omurga (ResNet50,
+MobileNetV2, EfficientNetB0; frozen ya da son 3 blok fine-tune, BatchNorm
+dondurulmuş) $\to$ 512-boyutlu dal projeksiyonu (Linear$\to$LayerNorm$\to$GELU)
+$\to$ füzyon (concat / weighted / GMU) $\to$ MLP. Soldaki kesikli kutu omurgaları,
+ortadaki kesikli kutu projeksiyon dallarını gösterir. Çıkarımda final model TTA
+(base/hflip/scale/scale\_hflip; softmax ortalaması) kullanır.}
+\label{fig:arch}
+\end{figure}
 
 \subsection{Omurga Ağlar (Özellik Çıkarıcılar)}
 \label{subsec:backbones}
