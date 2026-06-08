@@ -1,0 +1,21 @@
+{
+  "accuracy": 0.8809791783905458,
+  "micro_f1": 0.8809791783905458,
+  "macro_precision": 0.5974113719970139,
+  "macro_recall": 0.6102278100335018,
+  "macro_f1": 0.6004781393638505,
+  "weighted_precision": 0.8806509341288193,
+  "weighted_recall": 0.8809791783905458,
+  "weighted_f1": 0.8797452427738777,
+  "mcc": 0.8710178582764092,
+  "experiment": "11_triple_weighted_finetune_wide_official",
+  "folds_used": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "n_samples": 10662,
+  "predictions_file": "predictions_ensemble_tta.npz"
+}

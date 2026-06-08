@@ -34,3 +34,8 @@ experiment_id,backbone_names,fusion_type,mode,fold,accuracy,macro_f1,macro_preci
 15_triple_gmu_finetune_wide_official_fold_2,"resnet50, mobilenetv2, efficientnetb0",gmu,finetune-3blk,2,0.8557964184731386,0.5704705449414404,0.5624426072251346,0.5908502081908881,13
 15_triple_gmu_finetune_wide_official_fold_3,"resnet50, mobilenetv2, efficientnetb0",gmu,finetune-3blk,3,0.8421300659754948,0.5634182110055359,0.5621963387093946,0.5813156299843434,16
 15_triple_gmu_finetune_wide_official_fold_4,"resnet50, mobilenetv2, efficientnetb0",gmu,finetune-3blk,4,0.8532658693652254,0.575296349235517,0.5665604961083621,0.5980166882478728,14
+16_triple_weighted_finetune_focal_official,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,0,0.8581526861451461,0.5776684073585097,0.5777606292236199,0.5960942898103266,12
+16_triple_weighted_finetune_focal_official_fold_1,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,1,0.8666352497643732,0.5847157179073836,0.575206099108887,0.6137939074380854,17
+16_triple_weighted_finetune_focal_official_fold_2,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,2,0.8647502356267672,0.568700925178985,0.5656534965662214,0.5910804002414176,14
+16_triple_weighted_finetune_focal_official_fold_3,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,3,0.8393025447690857,0.5741219761066975,0.576082038770469,0.6171363686139408,13
+16_triple_weighted_finetune_focal_official_fold_4,"resnet50, mobilenetv2, efficientnetb0",weighted,finetune-3blk,4,0.8725850965961361,0.5962357207754032,0.5875778049387441,0.6126707115408955,14

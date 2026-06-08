@@ -253,6 +253,186 @@ Saved to `results/tables/ci_{id}.json` for all 5 configs.
 
 ---
 
+## Week 3.5 — Performance Lift: Focal Loss Ablation
+*Completed: 2026-06-07 (Step 3)*
+
+Additive ablation (D-06): the Week 3 best config (exp 11, triple weighted
+fine-tune) re-run with **focal loss** (Lin et al. 2017, γ=2.0) instead of
+label-smoothed cross-entropy. Single-variable change — `finetune_wide_focal.yaml`
+differs from `finetune_wide.yaml` only in the loss block. Trained on **Colab
+A100** via the runner-only notebook (D-09 provenance gate passed). Original CE
+runs (exp 11) preserved unchanged for comparison.
+
+### Results — exp 16 focal 5-fold CV
+
+Per-fold (test set, official 5-fold split):
+
+| Fold | Acc | Macro F1 |
+|---|---:|---:|
+| 0 | 0.8582 | 0.5777 |
+| 1 | 0.8666 | 0.5847 |
+| 2 | 0.8648 | 0.5687 |
+| 3 | 0.8393 | 0.5741 |
+| 4 | 0.8726 | 0.5962 |
+
+Zero-support classes: none in any fold. No NaN values in any fold.
+
+CV summary: macro F1 = **0.5803 ± 0.0095**, accuracy = 0.8603 ± 0.0115,
+macro precision = 0.5765 ± 0.0070, macro recall = 0.6062 ± 0.0105.
+
+### Focal vs CE — head-to-head (single-variable ablation)
+
+Pooled over all 5 folds (n = 10,662), bootstrap 95% CI (n_bootstrap=1000, seed=42):
+
+| Exp | Loss | Macro-F1 (pooled) | 95% CI | CV mean±std | Acc | Weighted-F1 | MCC |
+|---|---|---:|---|---|---:|---:|---:|
+| **11** | **CE (label-smooth)** | **0.6000** | **[0.5814, 0.6206]** | 0.5892 ± 0.0102 | **0.8706** | **0.8716** | **0.8599** |
+| 16 | Focal (γ=2.0) | 0.5914 | [0.5750, 0.6096] | 0.5803 ± 0.0095 | 0.8603 | 0.8633 | 0.8489 |
+| Δ (focal − CE) | — | −0.0086 | overlapping | −0.0089 | −0.0103 | −0.0083 | −0.0110 |
+
+Tables saved to `results/tables/ci_16_*.json`, `cv_16_*_summary.json`,
+`extra_metrics_16_*.json`. Confusion matrices in `results/runs/16_*/`.
+
+### Verdict — new best vs Week 3 best
+
+**Focal loss did NOT beat cross-entropy. The Week 3 champion (exp 11, triple
+weighted CE, pooled macro-F1 0.6000) remains the project best.**
+
+- Focal's pooled point estimate (0.5914) is **below** CE (0.6000), and the two
+  CIs **heavily overlap** ([0.5750, 0.6096] vs [0.5814, 0.6206]) — the difference
+  is not statistically distinguishable at the 95% level.
+- Focal is also marginally lower on **every** secondary metric (accuracy,
+  weighted-F1, MCC), so there is no metric under which focal wins.
+- This is an honest **negative result**, anticipated by the risk register
+  (exec plan §7) and D-06. No test-set retuning was performed.
+
+**Interpretation (for report §5.5):** the weighted-sampler already addresses
+class imbalance upstream, and focal's modulating factor `(1−p_t)^γ` adds no
+further gain on top of it. The residual bottleneck is the rare classes
+(support ≤ 10), which is a data-scarcity limit not solvable by reweighting the
+loss. CE label smoothing stays the recommended loss for this architecture.
+
+### Step 4 — Test-Time Augmentation (TTA) on the champion (exp 11)
+*Completed: 2026-06-07*
+
+Inference-time technique (no training). The champion checkpoint (exp 11, triple
+weighted CE) is run forward over each fold's held-out test set under a fixed,
+deterministic set of 4 views — `base` (Resize256→CenterCrop224), `hflip`,
+`scale` (Resize224→CenterCrop224), `scale_hflip` — and the **softmax is averaged**
+per image. Per-model, per-fold; no leakage, no cross-fold model averaging.
+Implemented in `scripts/evaluate.py`; run on the local RTX 5080.
+
+Validation: the `base`-only view reproduces the training-time `predictions.npz`
+exactly (100% prediction agreement on fold 0), confirming the inference path.
+
+Per-fold (test set):
+
+| Fold | base F1 | TTA F1 | Δ |
+|---|---:|---:|---:|
+| 0 | 0.5751 | 0.5827 | +0.0076 |
+| 1 | 0.6014 | 0.6126 | +0.0112 |
+| 2 | 0.5829 | 0.5808 | −0.0021 |
+| 3 | 0.5860 | 0.6025 | +0.0165 |
+| 4 | 0.6005 | 0.5987 | −0.0018 |
+
+### TTA vs base — head-to-head (exp 11)
+
+Pooled over all 5 folds (n = 10,662), bootstrap 95% CI (n_bootstrap=1000, seed=42):
+
+| Variant | Macro-F1 (pooled) | 95% CI | CV mean±std | Acc | Weighted-F1 | MCC |
+|---|---:|---|---|---:|---:|---:|
+| base (exp 11) | 0.6000 | [0.5814, 0.6206] | 0.5892 ± 0.0102 | 0.8706 | 0.8716 | 0.8599 |
+| **base + TTA** | **0.6075** | **[0.5860, 0.6296]** | 0.5955 ± 0.0121 | **0.8765** | **0.8761** | **0.8662** |
+| Δ (TTA − base) | +0.0075 | overlapping | +0.0063 | +0.0059 | +0.0045 | +0.0063 |
+
+Tables saved to `results/tables/ci_11_*_tta.json`, `extra_metrics_11_*_tta.json`;
+per-fold `predictions_tta.npz` / `metrics_tta.json` in `results/runs/11_*/`.
+
+### Verdict — TTA
+
+**TTA gives a small, consistent uplift on every metric (new pooled best point
+estimate macro-F1 = 0.6075), but it is NOT statistically significant at the 95%
+level — the TTA and base CIs overlap** ([0.5860, 0.6296] vs [0.5814, 0.6206]; each
+point estimate lies inside the other's interval).
+
+- Unlike focal (negative on all metrics), TTA improves macro-F1, accuracy,
+  weighted-F1 and MCC simultaneously, and never lowers the pooled aggregate.
+- It is a **zero-cost, training-free** inference add-on with no downside.
+- **Recommendation:** adopt TTA as the final inference protocol for the champion
+  (exp 11). It is the best-performing configuration by point estimate and is the
+  candidate "best model" to freeze in Step 7, while honestly noting the gain is
+  within CI overlap (not a statistically conclusive improvement over base).
+
+### Step 5 — Leakage-free seed ensemble on the champion (exp 11)
+*Completed: 2026-06-08*
+
+Train a second seed (123) of the unchanged champion config (`finetune_wide.yaml`,
+single-variable: only the seed changes) across all 5 folds, then average the
+per-image softmax of the two seeds **within each fold's held-out test set** and
+pool (D-07: leakage-free; no cross-fold model averaging). Seed 42 was trained in
+Week 3 on the RTX 5080; seed 123 on the same stack for a clean comparison.
+Implemented via a `--seed` override (`train.py`/`run_cv.py`) + `scripts/ensemble_seeds.py`.
+
+Per-seed CV (test macro-F1): seed 42 = 0.5892 ± 0.0102, seed 123 = 0.5779 ± 0.005
+(seed 123 is the weaker draw). Ensembled per-fold macro-F1 (base): 0.5882, 0.6070,
+0.5757, 0.6084, 0.5865. No NaN, no zero-support.
+
+### Ensemble vs base vs TTA — head-to-head (exp 11, pooled n=10,662)
+
+| Variant | Macro-F1 | 95% CI (width) | Acc | Weighted-F1 | MCC |
+|---|---:|---|---:|---:|---:|
+| base (seed 42) | 0.6000 | [0.5814, 0.6206] (0.039) | 0.8706 | 0.8716 | 0.8599 |
+| **TTA (seed 42)** | **0.6075** | [0.5860, 0.6296] (0.044) | 0.8765 | 0.8761 | 0.8662 |
+| ensemble (42+123) | 0.5971 | [0.5850, 0.6097] (0.025) | 0.8774 | 0.8780 | 0.8672 |
+| ensemble + TTA | 0.6005 | [0.5883, 0.6135] (0.025) | **0.8810** | **0.8797** | **0.8710** |
+
+Tables: `results/tables/ci_11_*_ensemble[_tta].json`, `extra_metrics_11_*_ensemble[_tta].json`.
+Ensemble predictions in canonical `results/runs/11_*/predictions_ensemble[_tta].npz`.
+
+### Verdict — seed ensemble
+
+**The leakage-free 2-seed ensemble did NOT raise the headline macro-F1:**
+ensemble+TTA pooled macro-F1 = 0.6005 < TTA-only 0.6075. The second seed (123,
+CV 0.5779) under-performed seed 42 (0.5892), and averaging it in pulled the
+rare-class (macro) average down.
+
+- **However, the ensemble's variance-reduction benefit did materialise:** the CI
+  narrowed markedly (width 0.025 vs 0.044 for single-seed TTA), and ensemble+TTA
+  is the **best variant on accuracy (0.8810), weighted-F1 (0.8797) and MCC
+  (0.8710)** — these majority-class-weighted metrics benefit from averaging even
+  when macro-F1 does not.
+- All four variants' CIs overlap → no statistically significant difference.
+- With M=2 and one weak seed, a 2-seed average is sensitive to seed quality; it
+  can dip below the best single seed on macro-F1 (the rare-class-sensitive metric).
+- **Recommendation:** by the locked headline metric (macro-F1, PLD-11),
+  **exp 11 + TTA (single seed 42, 0.6075) remains the best model** and the
+  candidate to freeze in Step 7. The seed ensemble is reported honestly as a
+  robustness technique that stabilised variance and topped the aggregate metrics
+  but did not improve macro-F1 at M=2.
+
+### Week 3.5 summary — best vs Week 3 best
+
+| Technique | macro-F1 (pooled) | vs Week 3 best (0.6000) |
+|---|---:|---|
+| Week 3 best — exp 11 CE (base) | 0.6000 | — (champion) |
+| + Focal (exp 16) | 0.5914 | worse (within CI) |
+| **+ TTA** | **0.6075** | **+0.0075 (within CI) — best macro-F1** |
+| + seed ensemble (+TTA) | 0.6005 | +0.0005 (within CI); best acc/weighted/MCC |
+
+**Overall Week 3.5 finding:** no technique produced a statistically significant
+(CI-level) macro-F1 gain over the Week 3 CE champion — the architecture is at its
+ceiling on the official 5-fold protocol. TTA gives the best macro-F1 point
+estimate (0.6075) at zero training cost and is adopted as the inference protocol;
+the recommended final model is **exp 11 (triple weighted CE) + TTA**.
+
+**FROZEN FINAL MODEL (Step 7, 2026-06-08): `exp 11` (triple weighted CE) + TTA,
+seed 42 — pooled macro-F1 0.6075, 95% CI [0.5860, 0.6296].** This is the new best
+vs the Week 3 best (exp 11 base, 0.6000) — a +0.0075 point-estimate gain, within
+CI overlap (not statistically significant). Full freeze record (checkpoints +
+inference recipe) in [`docs/FINAL_MODEL.md`](FINAL_MODEL.md). Week 4 builds on this.
+
+---
+
 ## Week 4 — Analysis and Report
 *Planned: ~2026-06-01 to 2026-06-04*
 

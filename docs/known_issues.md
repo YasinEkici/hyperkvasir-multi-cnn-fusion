@@ -37,3 +37,23 @@ Track reproducibility, dataset, and runtime issues here.
   device on first mismatch. (2) `EMA.reset_shadow(model)` added; called once in `Trainer.fit()`
   at the first epoch EMA becomes active, before `update()`, to warm-start shadow from current
   trained weights. Both fixes verified by 15 EMA unit tests (all pass).
+
+## KI-004: Week 3.5 caveats (focal / TTA / seed ensemble) — informational
+
+- **Architecture at ceiling on official 5-fold:** no Week 3.5 technique beat the
+  Week 3 CE champion (macro-F1 0.6000) at the 95% CI level. Focal 0.5914 (lost),
+  TTA 0.6075 (+0.0075, within CI), seed ensemble 0.6005 (within CI). All CIs
+  overlap. Residual gap is rare-class data scarcity (support ≤ 10), not a model bug
+  (resolves the KI-002 open question: the F1 gap vs literature is a protocol +
+  rare-class-penalty effect, not under-training).
+- **Seed-123 weaker draw:** the second ensemble seed (123, CV 0.5779) underperformed
+  seed 42 (0.5892); a 2-seed average is sensitive to seed quality and dipped below
+  the best single seed on macro-F1. A larger M with stronger seeds might help but was
+  out of scope for the deadline.
+- **Hardware/stack note:** seed-42 (Week 3) and seed-123 (Step 5) were both trained
+  on RTX 5080 / cu132 to keep the seed ensemble single-variable. Step 3 focal (exp 16)
+  ran on Colab A100 / cu128 as a separate self-contained experiment. TTA/ensemble
+  inference (Steps 4–5 post-processing) ran locally on the RTX 5080.
+- **Provenance-gate runtime (Colab):** `check_provenance.py` SHA-256s the full dataset
+  tree twice (source on Drive FUSE + staged local) — several minutes per run; expected,
+  not a hang.

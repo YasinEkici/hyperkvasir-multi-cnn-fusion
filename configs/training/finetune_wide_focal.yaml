@@ -1,0 +1,42 @@
+# Clone of finetune_wide.yaml with loss block swapped to focal loss.
+# This is a single-variable ablation: CE (finetune_wide) vs focal (this file).
+# All other settings are identical.
+#
+# Focal loss: Lin et al. 2017 eq. 5 — FL(p_t) = -α_t (1 - p_t)^γ log(p_t)
+# γ=2.0 is the paper's recommended value. No label smoothing (see FocalLoss
+# docstring for rationale). No α class weighting for the base ablation;
+# use type: "focal_balanced" for inverse-frequency α.
+epochs: 60
+batch_size: 64
+mixed_precision: true
+unfreeze_blocks: 3
+optimizer:
+  type: "adamw"
+  head_lr: 1.0e-3
+  backbone_lr: 1.0e-4
+  weight_decay: 1.0e-4
+  llrd_decay: 0.75
+scheduler:
+  type: "cosine_with_warmup"
+  warmup_epochs: 5
+loss:
+  type: "focal"
+  gamma: 2.0
+augmentation:
+  rand_augment: {N: 2, M: 9}
+  cutmix: {alpha: 1.0, prob: 0.5}
+  horizontal_flip: true
+ema:
+  enabled: true
+  decay: 0.999
+  start_epoch: 5
+early_stopping:
+  patience: 8
+  monitor: "val_macro_f1"
+reproducibility:
+  seed: 42
+  deterministic: true
+  cudnn_benchmark: false
+tracking:
+  backend: "json"
+  mlflow_uri: "mlruns"

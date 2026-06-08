@@ -92,6 +92,13 @@ experiments:
     training: "configs/training/finetune_wide.yaml"
     fold: 0
 
+  # --- Stage 3: Week 3.5 focal loss ablation ---
+  - id: "16_triple_weighted_finetune_focal_official"
+    dataset: "configs/dataset/hyperkvasir_23class_official.yaml"
+    method: "configs/method/triple_weighted.yaml"
+    training: "configs/training/finetune_wide_focal.yaml"
+    fold: 0
+
   # --- Legacy _own entries (not used for official reporting) ---
   - id: "01_single_resnet50_frozen_own"
     dataset: "configs/dataset/hyperkvasir_23class_own.yaml"

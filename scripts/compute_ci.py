@@ -46,6 +46,11 @@ def main() -> None:
     )
     parser.add_argument("--n-bootstrap", type=int, default=1000)
     parser.add_argument("--ci", type=float, default=0.95)
+    parser.add_argument(
+        "--predictions",
+        default="predictions.npz",
+        help="Per-fold predictions filename to pool (e.g. predictions_tta.npz)",
+    )
     args = parser.parse_args()
 
     all_preds: list[np.ndarray] = []
@@ -54,7 +59,7 @@ def main() -> None:
 
     for fold in args.folds:
         run_dir = _fold_run_dir(args.experiment, fold)
-        npz_path = run_dir / "predictions.npz"
+        npz_path = run_dir / args.predictions
         if not npz_path.exists():
             print(f"[WARN] Fold {fold}: predictions.npz not found at {npz_path} — skipping.")
             continue
@@ -97,9 +102,13 @@ def main() -> None:
         "n_samples": int(len(preds)),
     }
 
+    pred_tag = Path(args.predictions).stem.replace("predictions", "").strip("_")
+    result["predictions_file"] = args.predictions
+
     out_dir = _ROOT / "results" / "tables"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"ci_{args.experiment}.json"
+    name = f"ci_{args.experiment}.json" if not pred_tag else f"ci_{args.experiment}_{pred_tag}.json"
+    out_path = out_dir / name
     with open(out_path, "w") as f:
         json.dump(result, f, indent=2)
     print(f"Saved -> {out_path}")

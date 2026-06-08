@@ -136,6 +136,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# Project env/ holds dependency manifests (requirements-colab.txt, etc.), not a
+# virtualenv. On case-insensitive filesystems the ENV/ rule above also matches
+# it, so re-include it explicitly. Colab clones from GitHub and needs these.
+!/env/
+!/env/**
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -207,6 +213,8 @@ results/*
 !results/tables/.gitkeep
 !results/figures/
 !results/figures/.gitkeep
+returned_outputs/
+.colab/
 
 # Literature source PDFs and extracted heavy assets
 references/**/original.pdf
@@ -221,3 +229,6 @@ references/**/assets/pictures/*
 references/**/*.jpg
 references/**/*.jpeg
 references/**/*.png
+
+reports/
+docs/report/

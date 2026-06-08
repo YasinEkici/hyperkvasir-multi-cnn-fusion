@@ -2,6 +2,143 @@
 
 Record successful runs and environment notes here.
 
+## 2026-06-08 - Week 3.5 Step 7 Close-out — COMPLETE (plan archived)
+
+- **Final model frozen: `exp 11` (triple weighted CE fine-tune) + TTA, seed 42.**
+  Pooled macro-F1 0.6075, 95% CI [0.5860, 0.6296]. Chosen over the seed ensemble
+  because (a) it wins on the headline macro-F1 (PLD-11; 0.6075 > 0.6005), (b) the
+  ensemble's only edge is a +0.0023 CI-lower-bound within overlap, and (c) a single
+  model gives clean Grad-CAM++/per-class for Week 4. Freeze record:
+  `docs/FINAL_MODEL.md` (checkpoints per fold + deterministic 4-view TTA recipe).
+- **New best vs Week 3 best:** 0.6075 vs 0.6000 — a +0.0075 point-estimate gain,
+  within CI overlap (NOT statistically significant). Honest finding: no Week 3.5
+  technique (focal / TTA / seed ensemble) beat the CE champion at the 95% CI level;
+  the architecture is at its ceiling on the official 5-fold protocol.
+- **Week 3.5 status:** Steps 1–5 DONE; Step 6 (recipe-v2) SKIPPED (optional,
+  deprioritized for the 2026-06-08 deadline; recorded as honest future work).
+- `uv run pytest tests/` green (176 passed). No PLD-* changed. No checkpoints/raw
+  data committed (`best.pt` gitignored).
+- Exec plan moved: `docs/exec-plans/active/003.5-...` → `docs/exec-plans/completed/`.
+
+## 2026-06-08 - Week 3.5 Step 5 Leakage-free Seed Ensemble — COMPLETE
+
+- Added `--seed` override to `train.py` + `run_cv.py` (feeds `seed_all`, recorded
+  in saved config; seeds != 42 write to `{exp}_seed{S}[_fold_{k}]` so canonical
+  seed-42 runs are not overwritten). Added `scripts/ensemble_seeds.py` (per-fold
+  softmax average across seeds → canonical `predictions_ensemble[_tta].npz`) and
+  `tests/test_ensemble.py` (8 tests). 176 tests pass.
+- USER trained seed 123 of exp 11 (unchanged `finetune_wide.yaml`, single-variable)
+  on local RTX 5080, all 5 folds. Same stack as the seed-42 champion (Week 3).
+  Per-fold test macro-F1: 0.5779 / 0.5720 / 0.5749 / 0.5852 / 0.5793 (CV 0.5779 ±
+  0.005). No NaN, no zero-support. seed 123 is the weaker draw vs seed 42 (0.5892).
+- ASSISTANT (inference only, RTX 5080): generated per-seed softmax (base + TTA) via
+  evaluate.py; ensembled per fold (leakage-free) + pooled CI / extra metrics.
+- Results (pooled n=10,662):
+  - ensemble (base): macro-F1 0.5971 [0.5850, 0.6097], acc 0.8774, wF1 0.8780, MCC 0.8672
+  - ensemble + TTA : macro-F1 0.6005 [0.5883, 0.6135], acc 0.8810, wF1 0.8797, MCC 0.8710
+  - vs base 0.6000 [0.5814, 0.6206] and TTA 0.6075 [0.5860, 0.6296].
+- **Verdict:** ensemble did NOT raise headline macro-F1 (0.6005 < TTA 0.6075) —
+  the weaker seed 123 dragged the rare-class average. But it delivered variance
+  reduction: CI width 0.025 vs 0.044, and best acc/weighted-F1/MCC of any variant.
+  All CIs overlap → not significant. By macro-F1 (PLD-11), **exp 11 + TTA remains
+  the best model**; ensemble reported honestly as a robustness technique with no
+  macro-F1 gain at M=2.
+- Added `docs/decisions.md` D-07 (leakage-free ensembling policy). Updated
+  `docs/results_progress.md` (Step 5 section + Week 3.5 summary table).
+
+## 2026-06-07 - Week 3.5 Step 4 Test-Time Augmentation (TTA) — COMPLETE
+
+- Implemented `scripts/evaluate.py` (was a scaffold): TTA inference path that
+  reuses `MultiCNNFusionClassifier`, `load_checkpoint`, `HyperKvasirImageDataset`,
+  `compute_metrics`. Deterministic 4-view set — base (Resize256→CenterCrop224),
+  hflip, scale (Resize224→CenterCrop224), scale_hflip — averaging softmax per
+  image. Per-model, per-fold; no leakage. Writes `predictions_{base,tta}.npz` +
+  `metrics_{base,tta}.json` per run. INFERENCE ONLY (no training), run on local
+  RTX 5080 (`--device cuda`).
+- Added `tests/test_tta.py` (10 tests): view set (base-only vs 4-view, base first),
+  deterministic base transform, hflip ≡ torch.flip(base), aggregate identity/
+  shape/probs-sum-to-1/elementwise-mean/empty-raises. All pass.
+- Added `--predictions` arg to `compute_ci.py` and `compute_extra_metrics.py` so
+  they can pool `predictions_tta.npz`; TTA outputs written to separate
+  `*_tta.json` tables (base tables untouched).
+- Validation: `evaluate.py` base-only on fold 0 reproduced training `predictions.npz`
+  exactly (100% agreement, acc 0.8685 / macro-F1 0.5751) — confirms the rebuilt
+  inference path.
+- TTA on champion exp 11, all 5 folds. Per-fold macro-F1 (base→TTA): 0.5751→0.5827,
+  0.6014→0.6126, 0.5829→0.5808, 0.5860→0.6025, 0.6005→0.5987.
+- Pooled (n=10,662): TTA macro-F1 **0.6075** [0.5860, 0.6296], acc 0.8765,
+  weighted-F1 0.8761, MCC 0.8662 — vs base 0.6000 [0.5814, 0.6206], 0.8706,
+  0.8716, 0.8599.
+- **Verdict:** TTA improves every metric (new best point estimate 0.6075) but
+  within CI overlap → not statistically significant at 95%. Zero-cost, no
+  retraining, never lowers the aggregate. Recommended as the final inference
+  protocol for exp 11 (candidate best model for Step 7 freeze), reported honestly
+  as a within-CI uplift.
+- `docs/results_progress.md` Week 3.5 Step 4 section + "TTA vs base" verdict added.
+
+## 2026-06-07 - Week 3.5 Step 3 Focal 5-Fold CV (exp 16) — COMPLETE
+
+- Ran exp `16_triple_weighted_finetune_focal_official` for folds 0–4 on **Colab
+  A100** via the runner-only notebook (D-09 provenance gate passed). GPU training
+  performed by the user; assistant ran CPU post-processing only.
+- Per-fold A100 timing: ~25–35 min/fold (~2 min/epoch, early-stop at epoch 12–17).
+- Per-fold test macro-F1: 0.5777 / 0.5847 / 0.5687 / 0.5741 / 0.5962.
+  No NaN, no zero-support classes in any fold.
+- Post-processing (CPU, local):
+  - `aggregate_cv.py` → macro-F1 0.5803 ± 0.0095, acc 0.8603 ± 0.0115.
+  - `compute_ci.py` → pooled macro-F1 0.5914, 95% CI [0.5750, 0.6096] (n=10,662).
+  - `compute_extra_metrics.py` (new) → acc/micro-F1 0.8603, weighted-F1 0.8633,
+    MCC 0.8489. Saved `results/tables/extra_metrics_16_*.json`.
+  - `plot_results.py --confusion-matrix` → 5 confusion matrices into
+    `results/runs/16_*/`; global comparison/training/per-class figures regenerated
+    over all experiments (per-class best remains exp 11 fold_1, F1=0.6014).
+- **Verdict: focal did NOT beat CE.** exp 16 pooled F1 0.5914 < exp 11 CE 0.6000;
+  CIs overlap; focal lower on every metric (acc, weighted-F1, MCC). Week 3 champion
+  (exp 11 triple weighted CE) stays the project best. Honest negative result per
+  D-06 / exec-plan §7. No test-set retuning.
+- `docs/results_progress.md` Week 3.5 section populated with the ablation table,
+  CI, and explicit "new best vs Week 3 best" verdict (acceptance gate passed).
+- Added `scripts/compute_extra_metrics.py` (MCC, micro/weighted F1 from saved
+  predictions; no retraining). Also computed for Week 3 configs 10/11/13/14/15.
+
+## 2026-06-06 - Week 3.5 Step 2 Focal Loss Implementation
+
+- Implemented `FocalLoss` in `src/training/losses.py` using the α-balanced
+  variant from Lin et al. 2017 (ICCV), eq. 5:
+  `FL(p_t) = -α_t (1 - p_t)^γ log(p_t)`.
+- Verbatim equation copied into `FocalLoss` docstring per AGENTS.md requirement.
+- Numerical stability via `F.cross_entropy(reduction='none')` for `log(p_t)`,
+  then `p_t = exp(-ce)` and `(1 - p_t)^γ` modulating factor. No manual
+  softmax + log.
+- Extended `build_loss` to support `type: "focal"` (γ-only, no class weighting)
+  and `type: "focal_balanced"` (γ + optional per-class α tensor).
+- Focal loss and label smoothing deliberately NOT combined (documented in
+  `FocalLoss` docstring and `docs/decisions.md` D-06).
+- Created `configs/training/finetune_wide_focal.yaml` — clone of
+  `finetune_wide.yaml` with only the loss block changed to `focal` (γ=2.0).
+  All other hyperparameters identical for a clean single-variable ablation.
+- Added exp 16 (`16_triple_weighted_finetune_focal_official`) to
+  `configs/experiment_matrix.yaml`.
+- Created `tests/test_focal_loss.py` — 29 tests covering:
+  γ=0 ≡ CE equivalence, focusing effect, α-vector shape/behavior,
+  numerical stability at extreme logits, gradient flow, reduction modes,
+  `build_loss` integration, and constructor validation.
+- Full test suite: **158 passed** (129 existing + 29 new), 0 failures.
+- No experiment results yet — training deferred to Step 3 on A100.
+
+## 2026-06-05 - Week 3.5 Step 1 Colab Runner Infrastructure
+
+- Added the A100 exploration config with batch 128, linearly scaled learning
+  rates, and config-controlled cuDNN benchmark mode.
+- Added run-specific resolved-config, hard-stop provenance, and returned-output
+  collection commands under `scripts/`.
+- Added a narrow `--training` override to `run_cv.py` / `train.py`; experiment
+  matrix and base training configs remain unchanged.
+- Added the runner-only Colab notebook and documentation. The notebook defaults
+  to an existing exp 11 fold-0 smoke test; exp 16 remains deferred to Steps 2–3.
+- Pinned the provisional Colab environment to the official PyTorch CUDA 12.8
+  wheel pair. Real A100 validation is pending the user-run smoke test.
+
 ## 2026-05-22 - Week 1 Steps 1-3 Environment Setup
 
 - Ran `uv sync`; environment resolved and checked successfully.

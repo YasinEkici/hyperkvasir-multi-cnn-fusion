@@ -1,0 +1,14 @@
+{
+  "experiment": "11_triple_weighted_finetune_wide_official_seed123",
+  "fold": 2,
+  "tta": false,
+  "views": [
+    "base"
+  ],
+  "n_test": 2122,
+  "accuracy": 0.8746465598491989,
+  "macro_f1": 0.5749189346438496,
+  "macro_precision": 0.5923156404402813,
+  "macro_recall": 0.588508766938816,
+  "zero_support_classes": []
+}
