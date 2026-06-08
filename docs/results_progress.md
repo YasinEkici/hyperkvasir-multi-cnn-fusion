@@ -425,6 +425,12 @@ ceiling on the official 5-fold protocol. TTA gives the best macro-F1 point
 estimate (0.6075) at zero training cost and is adopted as the inference protocol;
 the recommended final model is **exp 11 (triple weighted CE) + TTA**.
 
+**FROZEN FINAL MODEL (Step 7, 2026-06-08): `exp 11` (triple weighted CE) + TTA,
+seed 42 — pooled macro-F1 0.6075, 95% CI [0.5860, 0.6296].** This is the new best
+vs the Week 3 best (exp 11 base, 0.6000) — a +0.0075 point-estimate gain, within
+CI overlap (not statistically significant). Full freeze record (checkpoints +
+inference recipe) in [`docs/FINAL_MODEL.md`](FINAL_MODEL.md). Week 4 builds on this.
+
 ---
 
 ## Week 4 — Analysis and Report

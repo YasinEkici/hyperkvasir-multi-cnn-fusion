@@ -2,6 +2,24 @@
 
 Record successful runs and environment notes here.
 
+## 2026-06-08 - Week 3.5 Step 7 Close-out — COMPLETE (plan archived)
+
+- **Final model frozen: `exp 11` (triple weighted CE fine-tune) + TTA, seed 42.**
+  Pooled macro-F1 0.6075, 95% CI [0.5860, 0.6296]. Chosen over the seed ensemble
+  because (a) it wins on the headline macro-F1 (PLD-11; 0.6075 > 0.6005), (b) the
+  ensemble's only edge is a +0.0023 CI-lower-bound within overlap, and (c) a single
+  model gives clean Grad-CAM++/per-class for Week 4. Freeze record:
+  `docs/FINAL_MODEL.md` (checkpoints per fold + deterministic 4-view TTA recipe).
+- **New best vs Week 3 best:** 0.6075 vs 0.6000 — a +0.0075 point-estimate gain,
+  within CI overlap (NOT statistically significant). Honest finding: no Week 3.5
+  technique (focal / TTA / seed ensemble) beat the CE champion at the 95% CI level;
+  the architecture is at its ceiling on the official 5-fold protocol.
+- **Week 3.5 status:** Steps 1–5 DONE; Step 6 (recipe-v2) SKIPPED (optional,
+  deprioritized for the 2026-06-08 deadline; recorded as honest future work).
+- `uv run pytest tests/` green (176 passed). No PLD-* changed. No checkpoints/raw
+  data committed (`best.pt` gitignored).
+- Exec plan moved: `docs/exec-plans/active/003.5-...` → `docs/exec-plans/completed/`.
+
 ## 2026-06-08 - Week 3.5 Step 5 Leakage-free Seed Ensemble — COMPLETE
 
 - Added `--seed` override to `train.py` + `run_cv.py` (feeds `seed_all`, recorded
