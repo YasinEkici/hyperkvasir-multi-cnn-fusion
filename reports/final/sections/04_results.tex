@@ -1,0 +1,94 @@
+% =====================================================================
+% 4. SONUÇLAR (Results)
+% Use ONLY documented values from results/. Do NOT invent numbers.
+% Source artifacts (do not modify originals; copy into reports/final/ later):
+%   Tables:  results/tables/ablation_table.md|csv
+%            results/tables/cv_{10,11,13,14,15}_*_summary.json
+%            results/tables/ci_{10,11,13,14,15}_*.json
+%            results/tables/extra_metrics_{10,11,13,14,15}_*.json
+%   Figures: results/figures/comparison_bar_chart.png
+%            results/figures/training_curves.png
+%            results/figures/per_class_f1_best.png
+%            results/runs/11_triple_weighted_finetune_wide_official/confusion_matrix.png
+% All figure/table includes are COMMENTED OUT so the skeleton compiles cleanly.
+% Uncomment after copying assets into reports/final/figures and reports/final/tables.
+% =====================================================================
+\section{Sonuçlar}
+\label{sec:results}
+
+\subsection{Tablo 1 — Tek-Fold Ablasyon (Stage 1)}
+\label{subsec:t1-ablation}
+% TODO: results/tables/ablation_table.md (fold-0 satırları) → LaTeX tablosu.
+%       Single / pair / triple; frozen vs fine-tune; macro-F1 headline.
+\TODO{Tablo 1: tek-fold ablasyon (kaynak: results/tables/ablation\_table.md).}
+% \input{tables/table1_ablation.tex}  % TODO: derived table dosyası oluşturulacak
+
+\subsection{Tablo 2 — Seçilmiş 5-Fold CV (mean$\pm$std)}
+\label{subsec:t2-cv}
+% TODO: cv_*_summary.json → exp 13/14/10/11/15 için Acc & macro-F1 mean±std.
+%       En iyi: exp 11 (R+M+E weighted) F1 0.5892 ± 0.0102.
+\TODO{Tablo 2: 5-fold CV mean$\pm$std (kaynak: results/tables/cv\_*\_summary.json).}
+% \input{tables/table2_cv.tex}
+
+\subsection{Tablo 2b — Bootstrap \%95 Güven Aralığı}
+\label{subsec:t2b-ci}
+% TODO: ci_*.json → pooled (n=10.662) macro-F1 point + %95 CI.
+%       exp 11 CI [0.5814, 0.6206]; exp 10 concat ile örtüşmüyor.
+\TODO{Tablo 2b: bootstrap \%95 CI (kaynak: results/tables/ci\_*.json).}
+% \input{tables/table2b_ci.tex}
+
+\subsection{Destekleyici Metrikler (micro-F1 / weighted-F1 / MCC)}
+\label{subsec:extra-metrics}
+% TODO: extra_metrics_*.json → micro-F1, weighted-F1, MCC.
+%       NOT: bu dosyalar şu an git'te untracked; atıf öncesi commit edilmeli.
+\TODO{Destekleyici metrik tablosu (kaynak: results/tables/extra\_metrics\_*.json).}
+
+\subsection{Tablo 3 — En İyi Model Sınıf-Bazlı P/R/F1 + Support}
+\label{subsec:t3-perclass}
+% TODO: HENÜZ ÜRETİLMEDİ. exp 11 için 5-fold POOLED predictions.npz'den
+%       türetilecek (ayrı read-only adımda). Şu an fabrike edilmeyecek.
+\TODO{Tablo 3: sınıf-bazlı P/R/F1/support — exp 11, 5-fold pooled. (HENÜZ ÜRETİLMEDİ)}
+
+\subsection{Tablo 4 — Eğitim Süresi / Epoch Karşılaştırması}
+\label{subsec:t4-timing}
+% TODO: HENÜZ ÜRETİLMEDİ. results/runs/{id}/epoch_log.jsonl'den türetilecek
+%       (frozen vs fine-tune). Şu an fabrike edilmeyecek.
+\TODO{Tablo 4: eğitim süresi/epoch (kaynak: epoch\_log.jsonl). (HENÜZ ÜRETİLMEDİ)}
+
+\subsection{Şekiller}
+\label{subsec:figures}
+
+% --- Şekil: Mimari diyagramı (HENÜZ YOK — elle çizilecek) -------------
+% \begin{figure}[H]\centering
+%   \includegraphics[width=0.9\linewidth]{architecture.pdf}
+%   \caption{Çoklu CNN özellik füzyon mimarisi.}\label{fig:arch}
+% \end{figure}
+\TODO{Şekil: mimari diyagramı (elle çizilecek, henüz yok).}
+
+% --- Şekil: Karşılaştırma bar grafiği --------------------------------
+% \begin{figure}[H]\centering
+%   \includegraphics[width=0.9\linewidth]{comparison_bar_chart.png}
+%   \caption{Deneyler arası accuracy ve macro-F1.}\label{fig:bar}
+% \end{figure}
+\TODO{Şekil: comparison\_bar\_chart.png (results/figures/'den kopyalanacak).}
+
+% --- Şekil: Eğitim eğrileri ------------------------------------------
+% \begin{figure}[H]\centering
+%   \includegraphics[width=0.9\linewidth]{training_curves.png}
+%   \caption{Doğrulama accuracy/macro-F1 epoch eğrileri.}\label{fig:curves}
+% \end{figure}
+\TODO{Şekil: training\_curves.png (results/figures/'den kopyalanacak).}
+
+% --- Şekil: En iyi model confusion matrix (exp 11) -------------------
+% \begin{figure}[H]\centering
+%   \includegraphics[width=0.85\linewidth]{confusion_matrix_exp11.png}
+%   \caption{En iyi model (exp 11, üçlü weighted fine-tune) hata matrisi.}\label{fig:cm}
+% \end{figure}
+\TODO{Şekil: exp 11 confusion\_matrix.png (results/runs/11.../'den kopyalanacak).}
+
+\subsection{Literatür ile Bağlamsal Karşılaştırma (Ayrı Alt Bölüm)}
+\label{subsec:contextual}
+% TODO: Borgli resmi-split macro-F1 ≈ 0.62 → TEK protokol-uyumlu çapa.
+%       Effimix (0.97) / GastroViT (0.64) → FARKLI protokol → yalnızca bağlamsal,
+%       head-to-head tabloya KONULMAZ (PLD-17). Caveat'lar açıkça yazılacak.
+\TODO{Bağlamsal literatür karşılaştırması (protokol farkı vurgulanacak, head-to-head DEĞİL).}

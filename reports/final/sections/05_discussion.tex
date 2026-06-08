@@ -1,0 +1,42 @@
+% =====================================================================
+% 5. TARTIŞMA (Discussion) — EN KRİTİK BÖLÜM (%25)
+% Evidence base: docs/results_progress.md (key findings), docs/experiment_log.md,
+%                docs/report/AGENT_REPORT_RULES.md §4-§7.
+% Address the assignment §5.5 questions explicitly. Report neutral/negative
+% results honestly. No SOTA, no protocol-mismatched head-to-head claims.
+% =====================================================================
+\section{Tartışma}
+\label{sec:discussion}
+
+% TODO: Hangi omurga ağ daha iyi özellik öğrendi ve neden?
+%       Frozen'da EfficientNetB0 en iyi tekil (F1 0.5586); CV'de weighted füzyon kazandı.
+\TODO{Hangi CNN daha iyi özellik öğrendi? (frozen E en iyi tekil; gerekçe).}
+
+% TODO: Füzyon performansı artırdı mı? Concat vs weighted CI ayrımı
+%       (exp 11 lower 0.5814 > exp 10 upper 0.5799). GMU concat'i geçemedi (Δ≈0.002).
+\TODO{Füzyon yardımcı oldu mu? concat vs weighted CI ayrımı; GMU nötr sonucu.}
+
+% TODO: En iyi kombinasyon — üçlü weighted fine-tune (exp 11), CV F1 0.5892,
+%       pooled 0.6000. Fold-0 sıralamasının yanıltıcı olduğu (concat>weighted) ve
+%       5-fold ile tersine döndüğü açıklanacak (metodolojik ders).
+\TODO{En iyi kombinasyon (exp 11) ve fold-0 yanılgısının açıklaması.}
+
+% TODO: Güçlü/zayıf yönler — nadir sınıflar (support ≤ 10) F1=0; hata matrisi
+%       rastgele değil, anlamsal/görsel olarak yakın çoğunluk sınıfına soğuruluyor.
+\TODO{Güçlü/zayıf yönler; nadir-sınıf çöküşü (support ≤ 10) ve hata yapısı.}
+
+% TODO: Sınıf dengesizliği etkisi — accuracy 0.87 vs macro-F1 0.60 farkı;
+%       weighted-F1 0.87 / MCC 0.86. macro-F1'in neden headline olduğu.
+\TODO{Dengesizlik etkisi; accuracy$\leftrightarrow$macro-F1 farkı; macro-F1 gerekçesi.}
+
+% TODO: Hangi transfer learning yaklaşımı daha başarılı ve NE KADAR SÜRDÜ?
+%       Fine-tune CV ortalamasında frozen'ı geçti. Süre: Tablo 4'e bağlı (HENÜZ YOK).
+\TODO{Frozen vs fine-tune sonucu + süre yorumu (Tablo 4 üretilince bağlanacak).}
+
+% TODO: Literatür ile dürüst konumlandırma — bizim ~0.60 macro-F1, Borgli'nin
+%       resmi-split ~0.62 bandında; Effimix 0.97 farklı protokol (augment+balance+
+%       non-official split) → doğrudan kıyaslanamaz. Saklama, açıkla (§8 dürüstlük).
+\TODO{Dürüst literatür konumlandırması (protokol farkı; SOTA iddiası YOK).}
+
+% NOTE: En önemli sonuçların yorumu ve sınırlamalar öğrenci tarafından elle
+%       gözden geçirilecek (AGENT_REPORT_RULES.md §9).

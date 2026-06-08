@@ -1,0 +1,75 @@
+% =====================================================================
+% Multi-CNN Feature Fusion for HyperKvasir 23-class Classification
+% Final report — SKELETON ONLY (Overleaf / pdfLaTeX compatible)
+% Report language: Turkish (mandated by docs/report/AGENT_REPORT_RULES.md).
+%
+% RULES (see notes/report_notes.md):
+%   - Do NOT invent results. Use \TODO{} where numbers/figures are not frozen.
+%   - macro-F1 is the headline metric; accuracy is supporting only.
+%   - Literature comparisons that use a different protocol are CONTEXTUAL only.
+%   - No state-of-the-art claims.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+% --- Encoding & language (required for a Turkish report) ---------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[turkish]{babel}
+
+% --- Allowed common packages ------------------------------------------
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}   % \mathbb for fusion equations (Sec. Method)
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}   % keep last
+
+\graphicspath{{figures/}}
+
+% --- Simple TODO helper (visible in PDF, easy to grep) -----------------
+\newcommand{\TODO}[1]{\textbf{\textcolor{red}{[TODO: #1]}}}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue
+}
+
+% =====================================================================
+\title{Çoklu CNN Tabanlı Özellik Füzyonu ile HiperKvasir\\
+       23-Sınıf Gastrointestinal Görüntü Sınıflandırması}
+\author{\TODO{Öğrenci 1 Ad Soyad, No} \and \TODO{Öğrenci 2 Ad Soyad, No}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% ---------------------------------------------------------------------
+% ABSTRACT — write LAST (per task rules). Keep as TODO until results frozen.
+\begin{abstract}
+\TODO{Özet en son yazılacak. Headline metrik macro-F1; accuracy destekleyici.
+En iyi yapılandırma (üçlü weighted fine-tune, exp 11) ve resmi 5-fold protokol
+vurgulanacak. Literatür karşılaştırmaları protokol farkı nedeniyle yalnızca
+bağlamsaldır.}
+\end{abstract}
+
+% ---------------------------------------------------------------------
+\input{sections/01_introduction}
+\input{sections/02_methodology}
+\input{sections/03_experimental_setup}
+\input{sections/04_results}
+\input{sections/05_discussion}
+\input{sections/06_conclusion}
+
+% ---------------------------------------------------------------------
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

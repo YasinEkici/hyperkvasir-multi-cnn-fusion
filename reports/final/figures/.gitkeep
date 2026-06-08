@@ -1,0 +1,7 @@
+# Report figures go here.
+# Copy (do not move/modify originals) from:
+#   results/figures/comparison_bar_chart.png
+#   results/figures/training_curves.png
+#   results/figures/per_class_f1_best.png
+#   results/runs/11_triple_weighted_finetune_wide_official/confusion_matrix.png  -> confusion_matrix_exp11.png
+# Architecture diagram (architecture.pdf) must be drawn manually — does not exist yet.

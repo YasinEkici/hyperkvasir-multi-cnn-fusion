@@ -1,0 +1,7 @@
+# Generated LaTeX table fragments go here (e.g. table1_ablation.tex, table2_cv.tex).
+# These will be derived later via a separate READ-ONLY step from:
+#   results/tables/ablation_table.{md,csv}
+#   results/tables/cv_*_summary.json
+#   results/tables/ci_*.json
+#   results/tables/extra_metrics_*.json
+# Table 3 (per-class, exp 11 5-fold pooled) and Table 4 (training time) are NOT yet produced.

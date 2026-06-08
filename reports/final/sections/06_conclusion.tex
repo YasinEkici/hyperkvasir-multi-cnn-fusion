@@ -1,0 +1,38 @@
+% =====================================================================
+% 6. SONUÇ (Conclusion)
+% Summarize actual findings only. Introduce NO new results.
+% Evidence base: docs/FINAL_MODEL.md, docs/results_progress.md, docs/decisions.md.
+% =====================================================================
+\section{Sonuç}
+\label{sec:conclusion}
+
+Bu çalışmada, HiperKvasir 23-sınıf gastrointestinal endoskopi görevi için üç
+önceden eğitilmiş CNN omurga ağının (ResNet50, MobileNetV2, EfficientNetB0)
+özelliklerini birleştiren, MLP sınıflandırıcılı bir füzyon mimarisi, resmi
+5-katlı protokol altında kontrollü biçimde değerlendirilmiştir. Karşılaştırmalar
+omurga ağ, füzyon (birleştirme / ağırlıklı / GMU) ve transfer öğrenme (frozen /
+fine-tune) eksenlerinde yürütülmüş; ana ölçüt olarak makro-F1 kullanılmıştır.
+Resmi 5-katlı protokolde en iyi yapılandırma üçlü ağırlıklı fine-tune (exp 11)
+olmuş; donmuş final model bu yapılandırmanın TTA'lı sürümüdür (havuzlanmış
+makro-F1 $0{,}6075$). Sayısal sonuçlar ve yorumlar
+Bölüm~\ref{sec:results}--\ref{sec:discussion}'de verilmiştir.
+
+\paragraph{Sınırlamalar.}
+En iyi yapılandırmanın üzerinde değerlendirilen toplamsal ablasyonların --- focal
+loss, TTA ve sızıntısız seed topluluğu --- hiçbiri \%95 güven aralığı düzeyinde
+CE şampiyonunu istatistiksel olarak geçememiştir; bu, mimarinin bu protokoldeki
+tavanına yakın olduğunu gösterir. Kalan açığın başlıca kaynağı, çok düşük destekli
+(support $\le 10$) nadir sınıflardır; bu, kayıp/çıkarım/topluluk düzeyindeki
+ayarlamalarla kapanmayan bir veri kıtlığı sınırıdır. Ayrıca, farklı protokol ve
+ön işleme kullanan literatür sonuçlarıyla doğrudan baş-başa karşılaştırma
+yapılamaz; yalnızca resmi-bölme tabanlı sonuçlar bağlamsal bir çapa sağlar. Son
+olarak, final model tek tohumla (seed 42) eğitilmiştir.
+
+\paragraph{Gelecek çalışma.}
+İleride, donmuş model üzerinde yorumlanabilirlik analizleri --- Grad-CAM++
+\cite{chattopadhyay2018gradcampp} ile sınıf-etkin bölge görselleştirmesi ve
+birleşik 512-boyutlu özelliklerin UMAP~\cite{mcinnes2018umap} ile izdüşürülmesi
+--- eklenebilir. Eğitim reçetesinin daha ileri bir sürümü (recipe-v2) ve daha
+geniş bir tohum topluluğu da, özellikle nadir sınıflar için, olası iyileştirme
+yönleri olarak değerlendirilebilir. Bu yönler bu raporun kapsamı dışındadır ve
+gelecek çalışma olarak bırakılmıştır.

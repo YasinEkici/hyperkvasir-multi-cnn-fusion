@@ -229,6 +229,3 @@ references/**/assets/pictures/*
 references/**/*.jpg
 references/**/*.jpeg
 references/**/*.png
-
-reports/
-docs/report/
