@@ -154,50 +154,71 @@ def fig_perclass() -> None:
 
 def fig_architecture() -> None:
     import matplotlib.patches as mpatches
-    fig, ax = plt.subplots(figsize=(9, 3.7))
-    ax.set_xlim(0, 12.6); ax.set_ylim(-0.1, 4.1); ax.axis("off")
-    bw, bh = 1.7, 0.8
+    PRE, TRN, IO = "#dbe5f1", "#d4ecd4", "#eeeeee"  # pretrained / trained / io
+    fig, ax = plt.subplots(figsize=(10.6, 4.7))
+    ax.set_xlim(0, 13.6); ax.set_ylim(-0.9, 4.9); ax.axis("off")
+    bh = 0.8
 
-    def box(x, yc, text, fc, w=bw):
+    def box(x, yc, w, text, fc, hatch=None, fs=8):
         ax.add_patch(mpatches.FancyBboxPatch(
             (x, yc - bh / 2), w, bh, boxstyle="round,pad=0.02,rounding_size=0.08",
-            linewidth=0.8, edgecolor="#333333", facecolor=fc))
-        ax.text(x + w / 2, yc, text, ha="center", va="center", fontsize=8)
+            linewidth=0.8, edgecolor="#333333", facecolor=fc, hatch=hatch))
+        ax.text(x + w / 2, yc, text, ha="center", va="center", fontsize=fs)
 
     def arrow(x1, y1, x2, y2):
         ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
                     arrowprops=dict(arrowstyle="-|>", color="#333333", lw=0.9))
 
-    yT, yM, yB = 3.4, 2.0, 0.6
-    box(0.2, yM, "Girdi\n224×224×3", "#eeeeee")
-    bx = 2.5
-    box(bx, yT, "ResNet50\n2048-d", "#d6e4f0")
-    box(bx, yM, "MobileNetV2\n1280-d", "#d6e4f0")
-    box(bx, yB, "EfficientNetB0\n1280-d", "#d6e4f0")
-    px, pw = 4.7, 1.1
+    yT, yM, yB = 3.5, 2.1, 0.7
+    ix, iw = 0.2, 1.7
+    box(ix, yM, iw, "Girdi\n224×224×3", IO)
+    bx, bw = 2.4, 1.9
+    box(bx, yT, bw, "ResNet50\n2048-d", PRE)
+    box(bx, yM, bw, "MobileNetV2\n1280-d", PRE)
+    box(bx, yB, bw, "EfficientNetB0\n1280-d", PRE)
+    px, pw = 4.9, 1.6
     for yy in (yT, yM, yB):
-        box(px, yy, "512-d", "#d8efd8", w=pw)
-    fx, fw = 6.3, 2.3
-    box(fx, yM, "Füzyon\nconcat / weighted / GMU", "#fae0c8", w=fw)
-    mx, mw = 9.0, 1.6
-    box(mx, yM, "MLP\n256 + Dropout", "#e6dcf0", w=mw)
-    sx, sw = 10.9, 1.5
-    box(sx, yM, "Softmax\n23 sınıf", "#eeeeee", w=sw)
+        box(px, yy, pw, "512-d\nLinear→LN→GELU", TRN, fs=6.4)
+    fx, fw = 7.0, 2.4
+    box(fx, yM, fw, "Füzyon\nconcat / weighted / GMU", TRN, fs=7.4)
+    mx, mw = 9.9, 1.7
+    box(mx, yM, mw, "MLP\n256, Dropout → 23", TRN, fs=7)
+    sx, sw = 12.0, 1.5
+    box(sx, yM, sw, "Softmax\n23 sınıf", IO)
 
     for yy in (yT, yM, yB):
-        arrow(0.2 + bw, yM, bx, yy)       # input -> backbones
+        arrow(ix + iw, yM, bx, yy)        # input -> backbones
         arrow(bx + bw, yy, px, yy)        # backbone -> projection
         arrow(px + pw, yy, fx, yM)        # projection -> fusion
     arrow(fx + fw, yM, mx, yM)            # fusion -> MLP
     arrow(mx + mw, yM, sx, yM)            # MLP -> Softmax
 
-    # dashed group boxes (no text labels -> explained in caption, no overlap)
+    # dashed group boxes
     for (x0, w0) in [(bx - 0.18, bw + 0.36), (px - 0.15, pw + 0.30)]:
         ax.add_patch(mpatches.Rectangle((x0, yB - bh / 2 - 0.12), w0, (yT - yB) + bh + 0.24,
                      fill=False, linestyle="--", linewidth=0.7, edgecolor="#888888"))
 
+    # transfer-learning regime annotation under the backbones group
+    ax.text(bx + bw / 2, yB - bh / 2 - 0.18,
+            "ImageNet ön-eğitimli\nfrozen ya da son 3 blok fine-tune (BN dondurulmuş)",
+            ha="center", va="top", fontsize=6.2, color="#333333")
+    # TTA inference note pointing at Softmax
+    ax.annotate("Çıkarım: 4-görünümlü TTA\n(softmax ortalaması)",
+                xy=(sx + sw / 2, yM - bh / 2), xytext=(sx + sw / 2, yB - bh / 2 - 0.18),
+                ha="center", va="top", fontsize=6.2, color="#333333",
+                arrowprops=dict(arrowstyle="-", color="#888888", lw=0.6))
+
+    # legend: trained vs pretrained
+    handles = [
+        mpatches.Patch(facecolor=TRN, edgecolor="#333333", label="eğitilen bileşen"),
+        mpatches.Patch(facecolor=PRE, edgecolor="#333333",
+                       label="ön-eğitimli omurga (frozen / kısmî fine-tune)"),
+    ]
+    ax.legend(handles=handles, loc="lower center", ncol=2, fontsize=6.4,
+              frameon=False, bbox_to_anchor=(0.5, 0.94))
+
     fig.savefig(OUT / "architecture.pdf"); plt.close(fig)
-    print("[ok] architecture.pdf (compact, no overlapping labels)")
+    print("[ok] architecture.pdf (enriched: transfer regime + projection + TTA + legend)")
 
 
 def main() -> None:
